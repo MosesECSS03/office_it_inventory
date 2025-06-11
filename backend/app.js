@@ -10,9 +10,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // Import routes (Boundary layer)
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const formsRoutes = require('./routes/formsRoutes');
 
 // Routes middleware
 app.use('/inventory', inventoryRoutes);
+app.use('/forms', formsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

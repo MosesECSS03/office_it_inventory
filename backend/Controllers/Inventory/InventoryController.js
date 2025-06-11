@@ -1,5 +1,5 @@
-const InventoryItem = require('../Entities/InventoryItem');
-const InventoryDatabase = require('../Database/Inventory/InventoryDatabase');
+const InventoryItem = require('../../Entities/Inventory/InventoryItem');
+const InventoryDatabase = require('../../Database/Inventory/InventoryDatabase');
 
 class InventoryController 
 {

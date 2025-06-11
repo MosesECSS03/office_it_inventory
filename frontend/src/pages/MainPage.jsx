@@ -5,6 +5,10 @@ import DateTimeComponent from '../components/DateTimeComponent'
 import StatisticsComponent from '../components/StatisticsComponent'
 import InventoryTableComponent from '../components/InventoryTableComponent'
 import FilterSearchComponent from '../components/FilterSearchComponent'
+import CheckinCheckoutFormComponent from '../components/CheckinCheckoutFormComponent'
+import InventoryDetailsFormComponent from '../components/InventoryDetailsFormComponent'
+import CheckinCheckoutButtonComponent from '../components/CheckinCheckoutButtonComponent'
+import InventoryDetailsButtonComponent from '../components/InventoryDetailsButtonComponent'
 
 class MainPage extends Component {
   constructor(props) {
@@ -18,7 +22,9 @@ class MainPage extends Component {
       isLoading: true,
       lastDataUpdate: null,
       currentDateTime: new Date(),
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
+      showCheckinCheckoutForm: false,
+      showInventoryDetailsForm: false
     };
   }
 
@@ -54,6 +60,10 @@ class MainPage extends Component {
         });
 
       console.log('Inventory data response:', inventoryResponse.data.data);
+      console.log('Number of items fetched:', inventoryResponse.data.data?.length || 0);
+      if (inventoryResponse.data.data && inventoryResponse.data.data.length > 0) {
+        console.log('Sample item structure:', inventoryResponse.data.data[0]);
+      }
 
       // Update state with the fetched data
       this.setState({
@@ -82,8 +92,35 @@ class MainPage extends Component {
     });
   }
 
+  // Handle IT Inventory Checkin/Checkout Form button click
+  handleCheckinCheckoutForm = () => {
+    console.log('IT Inventory Checkin/Checkout Form clicked');
+    this.setState({ showCheckinCheckoutForm: true });
+  }
+
+  // Handle IT Inventory Details Form button click
+  handleInventoryDetailsForm = () => {
+    console.log('IT Inventory Details Form clicked');
+    this.setState({ showInventoryDetailsForm: true });
+  }
+
+  // Handle closing Checkin/Checkout form
+  handleCloseCheckinCheckoutForm = () => {
+    this.setState({ showCheckinCheckoutForm: false });
+  }
+
+  // Handle closing Inventory Details form
+  handleCloseInventoryDetailsForm = () => {
+    this.setState({ showInventoryDetailsForm: false });
+  }
+
+  // Handle successful form submissions (refresh data)
+  handleFormSuccess = () => {
+    this.initializeData(); // Refresh the inventory data
+  }
+
   render() {
-    const { appTitle, timeZone, statisticsData, inventoryData, filteredInventoryData, isLoading, currentDateTime, lastUpdated } = this.state;
+    const { appTitle, timeZone, statisticsData, inventoryData, filteredInventoryData, isLoading, currentDateTime, lastUpdated, showCheckinCheckoutForm, showInventoryDetailsForm } = this.state;
 
     return (
       <div className="app-container">
@@ -124,17 +161,41 @@ class MainPage extends Component {
           </div>
         </div>
 
-        {/* Bottom Section - Placeholder */}
+        {/* Bottom Section - Action Buttons */}
         <div className="bottom-section">
-          <div className="placeholder-content">
-            <h3>Bottom Section</h3>
-            <p>This section is available for future components</p>
+          <div className="action-buttons-container">
+            <div className="button-group">
+              <CheckinCheckoutButtonComponent
+                onClick={this.handleCheckinCheckoutForm}
+                disabled={isLoading}
+                isLoading={isLoading}
+              />
+              <InventoryDetailsButtonComponent
+                onClick={this.handleInventoryDetailsForm}
+                disabled={isLoading}
+                isLoading={isLoading}
+              />
+            </div>
           </div>
         </div>
       </div>
       <footer className="app-footer">
         <div className="footer-spacer"></div>
       </footer>
+
+      {/* Modal Forms */}
+      <CheckinCheckoutFormComponent
+        data={inventoryData}
+        isVisible={showCheckinCheckoutForm}
+        onClose={this.handleCloseCheckinCheckoutForm}
+        onSuccess={this.handleFormSuccess}
+      />
+      
+      <InventoryDetailsFormComponent
+        isVisible={showInventoryDetailsForm}
+        onClose={this.handleCloseInventoryDetailsForm}
+        onSuccess={this.handleFormSuccess}
+      />
     </div>
     );
   }
