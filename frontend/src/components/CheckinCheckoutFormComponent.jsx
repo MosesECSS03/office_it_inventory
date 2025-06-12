@@ -7,7 +7,6 @@ class CheckinCheckoutFormComponent extends Component {
     this.state = {
       isVisible: false,
       activeTab: 'new', // 'new' or 'existing'
-      activeSubTab: 'return', // 'return' or 'update' (only for existing tab)
       currentPage: 1,
       totalPages: 2,
       
@@ -21,25 +20,14 @@ class CheckinCheckoutFormComponent extends Component {
         signature: ''
       },
       
-      // Equipment Types (Page 1)
-      equipmentTypes: {
-        laptop: { checked: false, inventoryNo: '' },
-        acPowerCord: { checked: false, inventoryNo: '' },
-        mouse: { checked: false, inventoryNo: '' },
-        carryingCase: { checked: false, inventoryNo: '' },
-        keyboard: { checked: false, inventoryNo: '' },
-        thumbDrive: { checked: false, inventoryNo: '' },
-        screenMonitor: { checked: false, inventoryNo: '' },
-        portableHardDisk: { checked: false, inventoryNo: '' },
-        mobilePhone: { checked: false, inventoryNo: '' },
-        others: { checked: false, inventoryNo: '', description: '' }
-      },
-      
       // Table Data (Page 2)
       tableRows: this.createDefaultRows(4),
       isSubmitting: false,
       errors: {},
       successMessage: '',
+      
+      // Object IDs from page transition
+      employeeFormObjectId: null, // Store the form object ID after fetching employee data
       
       // Search dropdown state
       searchDropdowns: {}, // Object to track dropdown state for each row
@@ -104,7 +92,10 @@ class CheckinCheckoutFormComponent extends Component {
           serialNumber: ''
         },
         condition: '',
-        notes: ''
+        notes: '',
+        location: '', // Add location field for return functionality
+        action: this.state?.activeTab === 'new' ? 'checkout' : 'checkout', // Default action based on tab - checkout for both new items and new items in existing tab
+        isPrePopulated: false // Default rows are not pre-populated
       });
     }
     return rows;
@@ -121,18 +112,6 @@ class CheckinCheckoutFormComponent extends Component {
         mobileNo: '',
         date: new Date().toISOString().split('T')[0],
         signature: ''
-      },
-      equipmentTypes: {
-        laptop: { checked: false, inventoryNo: '' },
-        acPowerCord: { checked: false, inventoryNo: '' },
-        mouse: { checked: false, inventoryNo: '' },
-        carryingCase: { checked: false, inventoryNo: '' },
-        keyboard: { checked: false, inventoryNo: '' },
-        thumbDrive: { checked: false, inventoryNo: '' },
-        screenMonitor: { checked: false, inventoryNo: '' },
-        portableHardDisk: { checked: false, inventoryNo: '' },
-        mobilePhone: { checked: false, inventoryNo: '' },
-        others: { checked: false, inventoryNo: '', description: '' }
       },
       tableRows: this.createDefaultRows(4),
       errors: {},
@@ -172,19 +151,6 @@ class CheckinCheckoutFormComponent extends Component {
       tableRows: this.createDefaultRows(4),
       errors: {},
       successMessage: ''
-    });
-  }
-
-  handleSubTabChange = (subTab) => {
-    this.setState({ activeSubTab: subTab, currentPage: 1 }, () => {
-      // Update action for existing rows when switching between return/update
-      if (this.state.activeTab === 'existing') {
-        const updatedRows = this.state.tableRows.map(row => ({
-          ...row,
-          action: subTab === 'return' ? 'checkin' : 'update'
-        }));
-        this.setState({ tableRows: updatedRows });
-      }
     });
   }
 
@@ -230,56 +196,100 @@ class CheckinCheckoutFormComponent extends Component {
         mobileNo: employeeDetails.mobileNo.trim()
       };
 
-      const response = await axios.post(`${baseURL}/form`, {employeeInfo, purpose: "existing"});
+      const response = await axios.post(`${baseURL}/forms`, {employeeInfo, purpose: "existing"});
 
       if (response.data && response.data.status === 'success') {
-        const currentInventory = response.data.data || [];
+        const responseData = response.data.data;
+        console.log('Response data structure:', responseData);
         
-        if (currentInventory.length > 0) {
-          // Populate table with current inventory
-          const populatedRows = currentInventory.map((item, index) => ({
-            id: index + 1,
-            ecssInventoryNo: item.ecssInventoryNo || '',
-            itemDescription: {
-              brand: item.itemDescription?.brand || '',
-              model: item.itemDescription?.model || '',
-              serialNumber: item.itemDescription?.serialNumber || ''
-            },
-            condition: item.condition || '',
-            notes: item.notes || '',
-            action: this.state.activeSubTab === 'return' ? 'checkin' : 'update'
-          }));
+        // The responseData is an array of form documents, each containing inventories
+        let currentInventory = [];
+        let formObjectId = null;
+        
+        if (responseData) {
 
-          // Add empty rows if needed to have at least 4 rows
-          while (populatedRows.length < 4) {
-            populatedRows.push({
-              id: populatedRows.length + 1,
-              ecssInventoryNo: '',
-              itemDescription: {
-                brand: '',
-                model: '',
-                serialNumber: ''
-              },
-              condition: '',
-              notes: ''
+          console.log('Processing latest form:', responseData);
+          
+          // Extract inventories from the form
+          currentInventory = responseData.inventories || [];
+          formObjectId = responseData._id;
+          
+          console.log('Current inventory items:', currentInventory);
+          console.log('Form Object ID:', formObjectId);
+          
+          if (currentInventory.length > 0) {
+            // Populate table with current inventory
+            const populatedRows = [];
+            
+            currentInventory.forEach((item, index) => {
+              console.log(`Processing inventory item ${index + 1}:`, item);
+              populatedRows.push({
+                id: index + 1,
+                ecssInventoryNo: item.ecssInventoryNo || '',
+                itemDescription: {
+                  brand: item.itemDescription?.brand || '',
+                  model: item.itemDescription?.model || '',
+                  serialNumber: item.itemDescription?.serialNumber || ''
+                },
+                condition: item.condition || '',
+                notes: item.notes || '',
+                location: '', // Add location field for return functionality
+                action: 'update', // Default action for existing items
+                isPrePopulated: true // Mark as pre-populated from database
+              });
             });
+
+            // Add empty rows if needed to have at least 4 rows
+            while (populatedRows.length < 4) {
+              populatedRows.push({
+                id: populatedRows.length + 1,
+                ecssInventoryNo: '',
+                itemDescription: {
+                  brand: '',
+                  model: '',
+                  serialNumber: ''
+                },
+                condition: '',
+                notes: '',
+                location: '', // Add location field for return functionality
+                action: 'checkout', // Default action for empty rows in existing tab (new items to checkout)
+                isPrePopulated: false // Mark as not pre-populated
+              });
+            }
+
+            console.log('Populated rows for existing inventory:', populatedRows);
+
+            this.setState({ 
+              tableRows: populatedRows,
+              employeeFormObjectId: formObjectId, // Store the form object ID
+              errors: {}, // Clear any previous errors
+              successMessage: `✅ Found ${currentInventory.length} equipment item(s) for ${employeeDetails.name}`
+            });
+
+            // Clear success message after 3 seconds
+            setTimeout(() => {
+              this.setState({ successMessage: '' });
+            }, 3000);
+          } else {
+            // No inventory found in the form
+            this.setState({ 
+              tableRows: this.createDefaultRows(4),
+              employeeFormObjectId: formObjectId, // Still store the form ID even if no inventory
+              successMessage: '⚠️ No equipment currently checked out to this employee.',
+              errors: {}
+            });
+
+            // Clear message after 3 seconds
+            setTimeout(() => {
+              this.setState({ successMessage: '' });
+            }, 3000);
           }
-
-          this.setState({ 
-            tableRows: populatedRows,
-            successMessage: `✅ Found ${currentInventory.length} item${currentInventory.length !== 1 ? 's' : ''} currently checked out to this employee.`,
-            errors: {} // Clear any previous errors
-          });
-
-          // Clear success message after 3 seconds
-          setTimeout(() => {
-            this.setState({ successMessage: '' });
-          }, 3000);
         } else {
-          // No inventory found
+          // No forms found for this employee
           this.setState({ 
             tableRows: this.createDefaultRows(4),
-            successMessage: '⚠️ No equipment currently checked out to this employee.',
+            employeeFormObjectId: null,
+            successMessage: '⚠️ No existing records found for this employee.',
             errors: {}
           });
 
@@ -308,7 +318,8 @@ class CheckinCheckoutFormComponent extends Component {
           general: `❌ ${errorMessage}` 
         },
         successMessage: '',
-        tableRows: this.createDefaultRows(4)
+        tableRows: this.createDefaultRows(4),
+        employeeFormObjectId: null
       });
 
       // Clear error message after 5 seconds
@@ -341,29 +352,39 @@ class CheckinCheckoutFormComponent extends Component {
       
       console.log('Employee inventory response:', response.data);
       
-      if (response.data && response.data.status === 'success' && response.data.data) {
-        const inventoryItems = response.data.data;
+      if (response.data && response.data.status === 'success') {
+        const responseData = response.data.data;
+        const currentInventory = responseData._inventories; // Get inventories array from FormItem response
         
-        if (inventoryItems.length > 0) {
-          // Create table rows from the existing inventory
-          const newTableRows = inventoryItems.map((item, index) => ({
-            id: index + 1,
-            ecssInventoryNo: item.ecssInventoryNo || '',
-            itemDescription: {
-              brand: item.itemDescription?.brand || '',
-              model: item.itemDescription?.model || '',
-              serialNumber: item.itemDescription?.serialNumber || ''
-            },
-            condition: item.condition || 'Good',
-            notes: item.notes || '',
-            action: this.state.activeSubTab === 'return' ? 'checkin' : 'update'
-          }));
+        // Store the form object ID if available
+        const formObjectId = responseData._id;
+        console.log('Form Object ID from response:', formObjectId);
+        console.log('Current inventory items:', currentInventory[0].inventories);
+        
+        if (currentInventory[0].inventories.length > 0) {
+          // Create table rows from the existing inventory and capture object IDs
+          const newTableRows = [];
+          
+          currentInventory[0].inventories.forEach((item, index) => {
+            
+            newTableRows.push({
+              ecssInventoryNo: item.ecssInventoryNo || '',
+              itemDescription: {
+                brand: item.itemDescription?.brand || '',
+                model: item.itemDescription?.model || '',
+                serialNumber: item.itemDescription?.serialNumber || ''
+              },
+              condition: item.condition,
+              notes: item.notes || '',
+              location: '', // Add location field for return functionality
+              action: 'update', // Default action for existing items
+              isPrePopulated: true // Mark as pre-populated from database
+            });
+          });
           
           // Add extra empty rows if needed (minimum 4 rows)
           while (newTableRows.length < 4) {
-            const newRowId = newTableRows.length + 1;
             newTableRows.push({
-              id: newRowId,
               ecssInventoryNo: '',
               itemDescription: {
                 brand: '',
@@ -372,13 +393,15 @@ class CheckinCheckoutFormComponent extends Component {
               },
               condition: '',
               notes: '',
-              action: this.state.activeSubTab === 'return' ? 'checkin' : 'update'
+              location: '', // Add location field for return functionality
+              action: 'checkout', // Default action for empty rows in existing tab (new items to checkout)
+              isPrePopulated: false // Mark as not pre-populated
             });
           }
           
           this.setState({ 
             tableRows: newTableRows,
-            successMessage: `Found ${inventoryItems.length} item(s) for ${employeeDetails.name}`
+            employeeFormObjectId: formObjectId // Store the form object ID
           });
           
           // Clear success message after 4 seconds
@@ -440,28 +463,16 @@ class CheckinCheckoutFormComponent extends Component {
     }
   }
 
-  handleEquipmentTypeChange = (type, field, value) => {
-    this.setState(prevState => ({
-      equipmentTypes: {
-        ...prevState.equipmentTypes,
-        [type]: {
-          ...prevState.equipmentTypes[type],
-          [field]: value
-        }
-      }
-    }));
-  }
-
   handleCellChange = (rowIndex, field, value) => {
     const updatedRows = [...this.state.tableRows];
     updatedRows[rowIndex][field] = value;
     
-    // Auto-set action based on tab and subtab
-    if (field !== 'action') {
+    // Auto-set action based on tab only if action is not already set
+    if (field !== 'action' && !updatedRows[rowIndex]['action']) {
       if (this.state.activeTab === 'new') {
         updatedRows[rowIndex]['action'] = 'checkout';
       } else {
-        updatedRows[rowIndex]['action'] = this.state.activeSubTab === 'return' ? 'checkin' : 'update';
+        updatedRows[rowIndex]['action'] = 'checkout'; // Default for new items in existing tab (adding new equipment to checkout)
       }
     }
     
@@ -470,13 +481,25 @@ class CheckinCheckoutFormComponent extends Component {
 
   handleItemDescriptionChange = (rowIndex, field, value) => {
     const updatedRows = [...this.state.tableRows];
+    
+    // Ensure itemDescription exists before accessing it
+    if (!updatedRows[rowIndex].itemDescription) {
+      updatedRows[rowIndex].itemDescription = {
+        brand: '',
+        model: '',
+        serialNumber: ''
+      };
+    }
+    
     updatedRows[rowIndex].itemDescription[field] = value;
     
-    // Auto-set action based on tab and subtab
-    if (this.state.activeTab === 'new') {
-      updatedRows[rowIndex]['action'] = 'checkout';
-    } else {
-      updatedRows[rowIndex]['action'] = this.state.activeSubTab === 'return' ? 'checkin' : 'update';
+    // Auto-set action based on tab only if action is not already set
+    if (!updatedRows[rowIndex]['action']) {
+      if (this.state.activeTab === 'new') {
+        updatedRows[rowIndex]['action'] = 'checkout';
+      } else {
+        updatedRows[rowIndex]['action'] = 'checkout'; // Default for new items in existing tab
+      }
     }
     
     this.setState({ tableRows: updatedRows });
@@ -506,7 +529,7 @@ class CheckinCheckoutFormComponent extends Component {
     
     // Check if this value no longer matches the previously auto-populated item
     const currentRow = this.state.tableRows[rowIndex];
-    if (currentRow && currentRow.itemDescription.brand) {
+    if (currentRow && currentRow.itemDescription && currentRow.itemDescription.brand) {
       // There was previously auto-populated data, check if current value still matches
       const inventoryItem = this.findInventoryItem(value.trim());
       if (!inventoryItem || 
@@ -575,7 +598,8 @@ class CheckinCheckoutFormComponent extends Component {
         serialNumber: ''
       },
       condition: '',
-      notes: ''
+      notes: '',
+      location: '' // Clear location field as well
     };
     
     this.setState({ tableRows: updatedRows });
@@ -625,95 +649,9 @@ class CheckinCheckoutFormComponent extends Component {
     }));
   }
 
-  getSampleData = () => {
-    return [
-      {
-        _assetsIdTag: 'ECSS001',
-        _brand: 'Dell',
-        _model: 'Latitude 5520',
-        _serialNumber: 'DL12345678',
-        _notes: 'Good condition laptop'
-      },
-      {
-        _assetsIdTag: 'ECSS002', 
-        _brand: 'HP',
-        _model: 'EliteBook 840',
-        _serialNumber: 'HP87654321',
-        _notes: 'Business laptop with Windows 11'
-      },
-      {
-        _assetsIdTag: 'ECSS003',
-        _brand: 'Logitech',
-        _model: 'MX Master 3',
-        _serialNumber: 'LG11223344',
-        _notes: 'Wireless mouse'
-      },
-      {
-        _assetsIdTag: 'ECSS004',
-        _brand: 'Apple',
-        _model: 'MacBook Air M2',
-        _serialNumber: 'AP55667788',
-        _notes: 'Silver MacBook Air'
-      },
-      {
-        _assetsIdTag: 'ECSS005',
-        _brand: 'Microsoft',
-        _model: 'Surface Pro 8',
-        _serialNumber: 'MS99887766',
-        _notes: 'Tablet with keyboard'
-      }
-    ];
-  }
-
-  // Get all available items for dropdown
-  getAllSuggestions = () => {
-    const dataToSearch = (this.props.data && this.props.data.length > 0) ? this.props.data : this.getSampleData();
-    
-    return dataToSearch.map(item => ({
-      value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
-      label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
-      item: item
-    })).slice(0, 10); // Limit to 10 suggestions
-  }
-
-  getSearchSuggestions = (searchValue) => {
-    // Use props data if available, otherwise use sample data for testing
-    const dataToSearch = (this.props.data && this.props.data.length > 0) ? this.props.data : this.getSampleData();
-    
-    // If no search value, return all items
-    if (!searchValue.trim()) {
-      return dataToSearch.map(item => ({
-        value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
-        label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
-        item: item
-      })).slice(0, 10); // Limit to 10 suggestions
-    }
-    
-    const searchTerm = searchValue.toLowerCase();
-    
-    return dataToSearch
-      .filter(item => {
-        const assetTag = (item._assetsIdTag || item.getAssetsIdTag?.() || '').toLowerCase();
-        const serialNumber = (item._serialNumber || item.getSerialNumber?.() || '').toLowerCase();
-        const brand = (item._brand || item.getBrand?.() || '').toLowerCase();
-        const model = (item._model || item.getModel?.() || '').toLowerCase();
-        
-        return assetTag.includes(searchTerm) || 
-               serialNumber.includes(searchTerm) ||
-               brand.includes(searchTerm) ||
-               model.includes(searchTerm);
-      })
-      .map(item => ({
-        value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
-        label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
-        item: item
-      }))
-      .slice(0, 10); // Limit to 10 suggestions
-  }
-
   findInventoryItem = (searchValue) => {
     // Use props data if available, otherwise use sample data for testing
-    const dataToSearch = (this.props.data && this.props.data.length > 0) ? this.props.data : this.getSampleData();
+    const dataToSearch = this.props.data;
     
     return dataToSearch.find(item => 
       (item._assetsIdTag || item.getAssetsIdTag?.()) === searchValue || 
@@ -733,15 +671,15 @@ class CheckinCheckoutFormComponent extends Component {
         model: inventoryItem._model || inventoryItem.getModel?.() || '',
         serialNumber: inventoryItem._serialNumber || inventoryItem.getSerialNumber?.() || ''
       },
-      condition: 'Good', // Default since condition might not be in current data structure
+      condition: "", // Default since condition might not be in current data structure
       notes: inventoryItem._notes || inventoryItem.getNotes?.() || ''
     };
     
-    // Auto-set action based on tab and subtab
+    // Auto-set action based on tab
     if (this.state.activeTab === 'new') {
       updatedRows[rowIndex]['action'] = 'checkout';
     } else {
-      updatedRows[rowIndex]['action'] = this.state.activeSubTab === 'return' ? 'checkin' : 'update';
+      updatedRows[rowIndex]['action'] = 'update'; // Default for existing items
     }
     
     this.setState({ tableRows: updatedRows });
@@ -771,6 +709,22 @@ class CheckinCheckoutFormComponent extends Component {
     });
   }
 
+  // Handle return action - sets action to 'checkin'
+  handleReturnAction = (rowIndex) => {
+    const updatedRows = [...this.state.tableRows];
+    updatedRows[rowIndex].action = 'checkin';
+    this.setState({ tableRows: updatedRows });
+    console.log(`Row ${rowIndex} action set to 'checkin' for return operation`);
+  }
+
+  // Handle update action - sets action to 'update'
+  handleUpdateAction = (rowIndex) => {
+    const updatedRows = [...this.state.tableRows];
+    updatedRows[rowIndex].action = 'update';
+    this.setState({ tableRows: updatedRows });
+    console.log(`Row ${rowIndex} action set to 'update' for update operation`);
+  }
+
   addRow = () => {
     const newRowId = Math.max(...this.state.tableRows.map(row => row.id), 0) + 1;
     const newRow = {
@@ -782,7 +736,10 @@ class CheckinCheckoutFormComponent extends Component {
         serialNumber: ''
       },
       condition: '',
-      notes: ''
+      notes: '',
+      location: '', // Add location field for return functionality
+      action: this.state.activeTab === 'new' ? 'checkout' : 'checkout', // Default action for new rows in existing tab is checkout
+      isPrePopulated: false // New rows are not pre-populated
     };
     this.setState({ 
       tableRows: [...this.state.tableRows, newRow] 
@@ -832,7 +789,7 @@ class CheckinCheckoutFormComponent extends Component {
   }
 
   validateRows = () => {
-    const { tableRows } = this.state;
+    const { tableRows, activeTab } = this.state;
     const errors = {};
     
     tableRows.forEach((row, index) => {
@@ -840,7 +797,7 @@ class CheckinCheckoutFormComponent extends Component {
       
       // Check if any field in the row has data
       const hasData = row.ecssInventoryNo.trim() || 
-                     Object.values(row.itemDescription).some(value => value.trim()) ||
+                     (row.itemDescription && Object.values(row.itemDescription).some(value => value.trim())) ||
                      row.notes.trim();
       
       // If row has data, validate required fields
@@ -878,11 +835,13 @@ class CheckinCheckoutFormComponent extends Component {
     // Filter out empty rows from page 2
     const validRows = tableRows.filter(row => 
       row.ecssInventoryNo.trim() || 
-      Object.values(row.itemDescription).some(value => value.trim()) ||
+      (row.itemDescription && Object.values(row.itemDescription).some(value => value.trim())) ||
       row.notes.trim()
     );
 
-    if (validRows.length === 0) {
+    // For existing tab (update form), allow submission even if table is empty
+    // This allows updating just employee details or processing returns
+    if (validRows.length === 0 && this.state.activeTab === 'new') {
       this.setState({ 
         errors: { general: 'Please fill in equipment details in the table.' }
       });
@@ -905,9 +864,12 @@ class CheckinCheckoutFormComponent extends Component {
         itemDescription: row.itemDescription,
         condition: row.condition,
         notes: row.notes,
-        action: row.action || (this.state.activeTab === 'new' ? 'checkout' : 
-               this.state.activeSubTab === 'return' ? 'checkin' : 'update')
+        location: row.location || '', // Include location field
+        action: row.action || (this.state.activeTab === 'new' ? 'checkout' : 'update'),
       }));
+      
+      // Determine the purpose based on the active tab
+      const purpose = this.state.activeTab === 'new' ? 'new' : 'update';
       
       // Submit data in the required format
       const submissionData = {
@@ -917,19 +879,35 @@ class CheckinCheckoutFormComponent extends Component {
         mobileNo: employeeDetails.mobileNo,
         inventories: inventories,
         date: currentDate,
-        time: currentTime
+        time: currentTime,
+        employeeFormObjectId: this.state.employeeFormObjectId || null // Include employee form object ID
       };
 
-      const response = await axios.post(`${baseURL}/forms`, {submissionData, purpose: "new"});
+      console.log('Submitting data:', submissionData);
+
+      const response = await axios.post(`${baseURL}/forms`, {submissionData, purpose});
+
+      console.log('Response received:', response.data); // Debug log
 
       // Check if response indicates success
       if (response.data && response.data.status === 'success') {
+        console.log('Success response detected, preparing to close form'); // Debug log
         const totalItems = validRows.length;
-        const actionWord = this.state.activeTab === 'new' ? 'checked out' : 
-                          this.state.activeSubTab === 'return' ? 'returned' : 'updated';
+        let actionWord;
+        
+        if (this.state.activeTab === 'new') {
+          actionWord = 'checked out';
+        } else {
+          // For existing tab, show different message based on whether there were items to update
+          actionWord = totalItems > 0 ? 'updated' : 'processed';
+        }
+        
+        const itemsMessage = totalItems > 0 
+          ? `${totalItems} equipment item${totalItems !== 1 ? 's' : ''} ${actionWord} successfully.`
+          : 'Employee information updated successfully.';
         
         this.setState({
-          successMessage: `✅ Success! ${totalItems} equipment item${totalItems !== 1 ? 's' : ''} ${actionWord} successfully.`,
+          successMessage: `✅ Success! ${itemsMessage}`,
           isSubmitting: false,
           errors: {} // Clear any previous errors
         });
@@ -939,10 +917,13 @@ class CheckinCheckoutFormComponent extends Component {
           this.props.onSuccess();
         }
 
-        // Auto-close after 4 seconds to give user time to read the message
+        // Auto-close immediately for new checkouts, after 2 seconds for updates
+        const closeDelay = this.state.activeTab === 'new' ? 1500 : 2000;
+        console.log(`Setting auto-close timer for ${closeDelay}ms`); // Debug log
         setTimeout(() => {
+          console.log('Auto-closing form now'); // Debug log
           this.handleClose();
-        }, 4000);
+        }, closeDelay);
       } else {
         // Handle case where request succeeded but server returned error status
         throw new Error(response.data?.message || 'Server returned an error status');
@@ -1011,25 +992,6 @@ class CheckinCheckoutFormComponent extends Component {
             Existing
           </button>
         </div>
-        
-        {activeTab === 'existing' && (
-          <div className="sub-tabs">
-            <button
-              type="button"
-              className={`sub-tab-button ${activeSubTab === 'return' ? 'active' : ''}`}
-              onClick={() => this.handleSubTabChange('return')}
-            >
-              Return
-            </button>
-            <button
-              type="button"
-              className={`sub-tab-button ${activeSubTab === 'update' ? 'active' : ''}`}
-              onClick={() => this.handleSubTabChange('update')}
-            >
-              Update
-            </button>
-          </div>
-        )}
       </div>
     );
   }
@@ -1063,13 +1025,21 @@ class CheckinCheckoutFormComponent extends Component {
   }
 
   renderPage1 = () => {
-    const { employeeDetails, equipmentTypes, errors, activeTab } = this.state;
+    const { employeeDetails, equipmentTypes, errors, activeTab, activeSubTab } = this.state;
     const isCheckout = activeTab === 'new';
+    
+    const getFormHeaderTitle = () => {
+      if (activeTab === 'new') {
+        return 'Equipment Checkout Form';
+      } else {
+        return activeSubTab === 'return' ? 'Equipment Update Form' : 'Equipment Delete Form';
+      }
+    };
     
     return (
       <div className="form-page pdf-style-page">
         <div className="pdf-header">
-          <h3 className="form-title">Equipment {isCheckout ? 'Checkout' : 'Return'} Form</h3>
+          <h3 className="form-title">{getFormHeaderTitle()}</h3>
           <div className="form-subtitle">En Community Services Society</div>
         </div>
 
@@ -1200,6 +1170,9 @@ class CheckinCheckoutFormComponent extends Component {
   }
 
   renderTableHeader = () => {
+    // Check if any row has action === 'checkin' to show location column
+    const showLocationColumn = this.state.tableRows.some(row => row.action === 'checkin');
+    
     return (
       <thead>
         <tr>
@@ -1207,6 +1180,7 @@ class CheckinCheckoutFormComponent extends Component {
           <th colSpan="3" className="header-cell">Item Description</th>
           <th rowSpan="2" className="header-cell">Condition</th>
           <th rowSpan="2" className="header-cell">Notes</th>
+          {showLocationColumn && <th rowSpan="2" className="header-cell">Location</th>}
           <th rowSpan="2" className="header-cell">Actions</th>
         </tr>
         <tr>
@@ -1224,6 +1198,9 @@ class CheckinCheckoutFormComponent extends Component {
     const hasDropdown = this.state.searchDropdowns[index] && 
                        this.state.searchSuggestions[index] && 
                        this.state.searchSuggestions[index].length > 0; // Show dropdown for any results
+    
+    // Check if any row has action === 'checkin' to show location column
+    const showLocationColumn = this.state.tableRows.some(row => row.action === 'checkin');
     
     return (
       <tr key={row.id} className="table-row">
@@ -1328,16 +1305,49 @@ class CheckinCheckoutFormComponent extends Component {
           />
         </td>
         
+        {showLocationColumn && (
+          <td>
+            <input
+              type="text"
+              value={row.location || ''}
+              onChange={(e) => this.handleCellChange(index, 'location', e.target.value)}
+              className={`table-input ${row.isPrePopulated && row.action === 'checkin' ? 'location-enabled' : 'location-disabled'}`}
+              placeholder={row.isPrePopulated && row.action === 'checkin' ? 'Return location...' : 'Location'}
+              disabled={!(row.isPrePopulated && row.action === 'checkin')}
+              title={row.isPrePopulated && row.action === 'checkin' ? 'Enter return location' : 'Location field (only enabled for returns)'}
+            />
+          </td>
+        )}
+        
         <td>
-          <button
-            type="button"
-            onClick={() => this.removeRow(index)}
-            className="remove-row-btn"
-            disabled={this.state.tableRows.length <= 1}
-            title="Remove row"
-          >
-            ×
-          </button>
+          {this.state.activeTab === 'existing' ? (
+            // Only show Return button if the row was pre-populated from database AND has data AND not already set to return
+            (row.isPrePopulated && 
+             row.action !== 'checkin' &&
+             (row.ecssInventoryNo.trim() || 
+              (row.itemDescription && Object.values(row.itemDescription).some(value => value.trim())) ||
+              row.condition.trim() || 
+              row.notes.trim())) ? (
+              <button
+                type="button"
+                className="return-btn"
+                title="Return equipment (check-in)"
+                onClick={() => this.handleReturnAction(index)}
+              >
+                Return
+              </button>
+            ) : null
+          ) : (
+            <button
+              type="button"
+              onClick={() => this.removeRow(index)}
+              className="delete-row-btn"
+              disabled={this.state.tableRows.length <= 1}
+              title="Remove row"
+            >
+              ×
+            </button>
+          )}
         </td>
       </tr>
     );
@@ -1352,7 +1362,7 @@ class CheckinCheckoutFormComponent extends Component {
       if (activeTab === 'new') {
         return 'Equipment Checkout Form';
       } else {
-        return activeSubTab === 'return' ? 'Equipment Return Form' : 'Equipment Update Form';
+        return activeSubTab === 'return' ? 'Equipment Update Form' : 'Equipment Delete Form';
       }
     };
 
@@ -1427,9 +1437,9 @@ class CheckinCheckoutFormComponent extends Component {
                       : currentPage === totalPages 
                         ? activeTab === 'new' 
                           ? 'Check Out Equipment' 
-                          : activeSubTab === 'return' 
-                            ? 'Return Equipment' 
-                            : 'Update Equipment'
+                          : activeSubTab === 'return'
+                            ? 'Update Equipment'
+                            : 'Delete Equipment'
                         : 'Next →'
                     }
                   </button>
@@ -1440,6 +1450,51 @@ class CheckinCheckoutFormComponent extends Component {
         </div>
       </div>
     );
+  }
+
+  // Get all available items for dropdown
+  getAllSuggestions = () => {
+    const dataToSearch = this.props.data || [];
+    
+    return dataToSearch.map(item => ({
+      value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
+      label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
+      item: item
+    }))
+  }
+
+  getSearchSuggestions = (searchValue) => {
+    // Use props data if available, otherwise return empty array
+    const dataToSearch = this.props.data || [];
+    
+    // If no search value, return all items
+    if (!searchValue.trim()) {
+      return dataToSearch.map(item => ({
+        value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
+        label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
+        item: item
+      })); // Limit to 10 suggestions
+    }
+    
+    const searchTerm = searchValue.toLowerCase();
+    
+    return dataToSearch
+      .filter(item => {
+        const assetTag = (item._assetsIdTag || item.getAssetsIdTag?.() || '').toLowerCase();
+        const serialNumber = (item._serialNumber || item.getSerialNumber?.() || '').toLowerCase();
+        const brand = (item._brand || item.getBrand?.() || '').toLowerCase();
+        const model = (item._model || item.getModel?.() || '').toLowerCase();
+        
+        return assetTag.includes(searchTerm) || 
+               serialNumber.includes(searchTerm) ||
+               brand.includes(searchTerm) ||
+               model.includes(searchTerm);
+      })
+      .map(item => ({
+        value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
+        label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
+        item: item
+      })); // Limit to 10 suggestions
   }
 }
 

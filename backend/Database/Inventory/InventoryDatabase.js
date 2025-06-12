@@ -95,7 +95,7 @@ class InventoryDatabase {
       const db = dbConnection.getDatabase();
       const collection = db.collection(this.collectionName);
       
-      const item = await collection.findOne({ _assetsIdTag: assetTag });
+      const item = await collection.findOne({ "Assets ID Tag": assetTag });
       console.log('Retrieved inventory item by asset tag:', assetTag, 'Found:', !!item);
       return item;
     } catch (error) {
@@ -116,7 +116,7 @@ class InventoryDatabase {
       const db = dbConnection.getDatabase();
       const collection = db.collection(this.collectionName);
       
-      const items = await collection.find({ _brand: new RegExp(brand, 'i') }).toArray();
+      const items = await collection.find({ "Brand": new RegExp(brand, 'i') }).toArray();
       console.log('Retrieved inventory items for brand:', brand, 'Count:', items.length);
       return items;
     } catch (error) {
@@ -137,7 +137,7 @@ class InventoryDatabase {
       const db = dbConnection.getDatabase();
       const collection = db.collection(this.collectionName);
       
-      const items = await collection.find({ _category: new RegExp(category, 'i') }).toArray();
+      const items = await collection.find({ "Category": new RegExp(category, 'i') }).toArray();
       console.log('Retrieved inventory items for category:', category, 'Count:', items.length);
       return items;
     } catch (error) {
@@ -161,23 +161,23 @@ class InventoryDatabase {
       const query = {};
       
       if (searchCriteria.assetTag) {
-        query._assetsIdTag = new RegExp(searchCriteria.assetTag, 'i');
+        query["Assets ID Tag"] = new RegExp(searchCriteria.assetTag, 'i');
       }
       
       if (searchCriteria.brand) {
-        query._brand = new RegExp(searchCriteria.brand, 'i');
+        query["Brand"] = new RegExp(searchCriteria.brand, 'i');
       }
       
       if (searchCriteria.model) {
-        query._model = new RegExp(searchCriteria.model, 'i');
+        query["Model"] = new RegExp(searchCriteria.model, 'i');
       }
       
       if (searchCriteria.serialNumber) {
-        query._serialNumber = new RegExp(searchCriteria.serialNumber, 'i');
+        query["Serial Number"] = new RegExp(searchCriteria.serialNumber, 'i');
       }
       
       if (searchCriteria.category) {
-        query._category = new RegExp(searchCriteria.category, 'i');
+        query["Category"] = new RegExp(searchCriteria.category, 'i');
       }
       
       const items = await collection.find(query).toArray();
@@ -240,7 +240,7 @@ class InventoryDatabase {
       };
       
       const result = await collection.findOneAndUpdate(
-        { _assetsIdTag: assetTag },
+        { "Assets ID Tag": assetTag },
         { $set: updateWithTimestamp },
         { returnDocument: 'after' }
       );
@@ -286,7 +286,7 @@ class InventoryDatabase {
       const db = dbConnection.getDatabase();
       const collection = db.collection(this.collectionName);
       
-      const result = await collection.deleteOne({ _assetsIdTag: assetTag });
+      const result = await collection.deleteOne({ "Assets ID Tag": assetTag });
       console.log('Inventory item deletion by asset tag result:', result.deletedCount > 0);
       return result.deletedCount > 0;
     } catch (error) {
@@ -308,8 +308,8 @@ class InventoryDatabase {
       
       const items = await collection.find({ 
         $or: [
-          { _status: 'available' },
-          { _status: { $exists: false } }, // Items without status field are considered available
+          { "Status": 'Working' },
+          { "Status": { $exists: false } }, // Items without status field are considered available
           { _isCheckedOut: { $ne: true } }
         ]
       }).toArray();
@@ -335,7 +335,7 @@ class InventoryDatabase {
       
       const items = await collection.find({ 
         $or: [
-          { _status: 'checked_out' },
+          { "Status": 'Checked Out' },
           { _isCheckedOut: true }
         ]
       }).toArray();
@@ -362,27 +362,27 @@ class InventoryDatabase {
       const totalItems = await collection.countDocuments();
       const availableItems = await collection.countDocuments({ 
         $or: [
-          { _status: 'available' },
-          { _status: { $exists: false } },
+          { "Status": 'Working' },
+          { "Status": { $exists: false } },
           { _isCheckedOut: { $ne: true } }
         ]
       });
       const checkedOutItems = await collection.countDocuments({ 
         $or: [
-          { _status: 'checked_out' },
+          { "Status": 'Checked Out' },
           { _isCheckedOut: true }
         ]
       });
       
       // Get brand distribution
       const brandStats = await collection.aggregate([
-        { $group: { _id: '$_brand', count: { $sum: 1 } } },
+        { $group: { _id: '$Brand', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]).toArray();
       
       // Get category distribution
       const categoryStats = await collection.aggregate([
-        { $group: { _id: '$_category', count: { $sum: 1 } } },
+        { $group: { _id: '$Category', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]).toArray();
       

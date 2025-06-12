@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import axios from 'axios'
+import { io } from 'socket.io-client'
 import TitleComponent from '../components/TitleComponent'
 import DateTimeComponent from '../components/DateTimeComponent'
 import StatisticsComponent from '../components/StatisticsComponent'
@@ -32,18 +33,24 @@ class MainPage extends Component {
     // Initialize data when component mounts
     this.initializeData();
     
-    // Update time every second
-    this.timer = setInterval(() => {
-      this.setState({
-        currentDateTime: new Date()
-      });
-    }, 1000);
+    // Connect to socket
+    this.socket = io('http://localhost:3001');
+ 
+    this.socket.on('inventory-updated', (data) => {
+      console.log("Socket event received", data);
+      this.initializeData();
+    });
   }
 
   componentWillUnmount() {
     // Clean up the timers when component unmounts
     if (this.timer) {
       clearInterval(this.timer);
+    }
+    
+    // Clean up socket connection
+    if (this.socket) {
+      this.socket.disconnect();
     }
   }
 
@@ -114,9 +121,10 @@ class MainPage extends Component {
     this.setState({ showInventoryDetailsForm: false });
   }
 
-  // Handle successful form submissions (refresh data)
+  // Handle successful form submissions (no auto-refresh)
   handleFormSuccess = () => {
-    this.initializeData(); // Refresh the inventory data
+    // Auto-refresh disabled - user can manually refresh if needed
+    console.log('Form submitted successfully - auto-refresh is disabled');
   }
 
   render() {

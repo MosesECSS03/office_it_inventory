@@ -46,6 +46,44 @@ class FormsController
     });
   }
 
+  updateForm(formData) {
+    return new Promise((resolve, reject) => {
+      try {
+        // Validate form data
+        if (!formData) {
+          reject({
+            status: 'error',
+            message: 'Invalid form data'
+          });
+          return;
+        }
+        
+        // Update the existing form/inventory data for the employee
+        this.formDatabase.updateEmployeeInventory(this.collectionName, formData)
+          .then(updatedItem => {
+            resolve({
+              status: 'success',
+              message: 'Form updated successfully',
+              data: updatedItem
+            });
+          })
+          .catch(err => {
+            reject({
+              status: 'error',
+              message: 'Failed to update form in database',
+              data: null,
+              error: err.message || err
+            });
+          });
+      } catch (error) {
+        reject({
+          status: 'error',
+          message: 'An unexpected error occurred while updating the form'
+        });
+      }
+    });
+  }
+
   getEmployeeCurrentInventory(employeeInfo) {
     return new Promise((resolve, reject) => {
       try {
@@ -61,18 +99,20 @@ class FormsController
         // Get current inventory for the employee
         this.formDatabase.getCurrentInventoryByEmployee(this.collectionName, employeeInfo)
           .then(currentInventory => {
-            console.log('Current Inventory:', currentInventory);
-            // Create a properly formatted response using FormItem pattern
+            console.log("Current Inventory:", currentInventory[0].inventories);
             const responseData = new FormItem();
-            responseData.setName(employeeInfo.name);
-            responseData.setEmail(employeeInfo.email);
-            responseData.setMobileNo(employeeInfo.mobileNo);
-            responseData.setInventories(currentInventory);
+            responseData.setId(currentInventory[0]._id); // Assuming department is part of employeeInfo
+            responseData.setName(currentInventory[0].name);
+            responseData.setEmail(currentInventory[0].email);
+            responseData.setMobileNo(currentInventory[0].mobileNo);
+            responseData.setInventories(currentInventory[0].inventories); // currentInventory is already an array of inventory items
+
+            console.log("Format:", responseData);
             
             resolve({
               status: 'success',
               message: 'Current inventory retrieved successfully',
-              data: responseData.getInventories() // Return just the inventories array
+              data: responseData
             });
           })
           .catch(err => {
@@ -107,17 +147,18 @@ class FormsController
         // Get all forms for the employee
         this.formDatabase.findByEmployee(this.collectionName, employeeInfo)
           .then(forms => {
+            console.log("Forms found for employee:", forms);
             // Format forms using FormItem pattern
             const formattedForms = forms.map(form => {
               const formItem = new FormItem();
-              if (form.submissionData) {
-                formItem.setName(form.submissionData.name || '');
-                formItem.setDepartment(form.submissionData.department || '');
-                formItem.setEmail(form.submissionData.email || '');
-                formItem.setMobileNo(form.submissionData.mobileNo || '');
-                formItem.setInventories(form.submissionData.inventories || []);
-                formItem.setDate(form.submissionData.date || '');
-                formItem.setTime(form.submissionData.time || '');
+              if (form) {
+                formItem.setName(form.name || '');
+                formItem.setDepartment(form.department || '');
+                formItem.setEmail(form.email || '');
+                formItem.setMobileNo(form.mobileNo || '');
+                formItem.setInventories(form.inventories || []);
+                formItem.setDate(form.date || '');
+                formItem.setTime(form.time || '');
               }
               return {
                 _id: form._id,

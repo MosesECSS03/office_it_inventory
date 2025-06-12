@@ -7,6 +7,19 @@ import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 ModuleRegistry.registerModules([ AllCommunityModule ]);
 
 class InventoryTableComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.gridApi = null;
+  }
+
+  componentDidUpdate(prevProps) {
+    // Check if data has changed and update the grid
+    if (prevProps.data !== this.props.data && this.gridApi) {
+      console.log('InventoryTableComponent: Data updated, refreshing grid');
+      //this.gridApi.setRowData(this.props.data || []);
+    }
+  }
+
   // Helper function to calculate warranty status based on warranty start and end dates
   calculateWarrantyStatus = (warrantyStartDate, warrantyEndDate) => {
     if (!warrantyEndDate) return 'Unknown';
@@ -810,7 +823,7 @@ class InventoryTableComponent extends Component {
       { 
         field: '_osVersion', 
         headerName: 'OS Version', 
-        width: 160,
+        width: 200,
         cellStyle: (params) => this.getCellStyle({ fontSize: '0.85rem' }, params.value)
       },
       { 

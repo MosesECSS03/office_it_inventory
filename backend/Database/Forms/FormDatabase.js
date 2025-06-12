@@ -1,5 +1,5 @@
 const dbConnection = require('../connection');
-const FormItem = require('../../Entities/Forms/FormItem');
+const { ObjectId } = require('mongodb');
 
 class FormDatabase {
   constructor() {
@@ -44,93 +44,315 @@ class FormDatabase {
       
       // Get all forms for this employee, sorted by date to process chronologically
       const forms = await collection.find(query).toArray();
-      console.log("Forms:", forms);
-      
-      // Track current inventory status for each item
-      const inventoryStatus = {};
-      
-      // Process all forms chronologically to get current status
-      forms.forEach(form => {
-        if (form.inventories && Array.isArray(form.inventories)) {
-          form.inventories.forEach(inventory => {
-            const key = inventory.ecssInventoryNo;
-            
-            if (inventory.action === 'checkout') {
-              // Item was checked out
-              inventoryStatus[key] = {
-                ...inventory,
-                status: 'checked_out',
-                checkoutDate: form.submissionData?.date || '',
-                checkoutTime: form.submissionData?.time || ''
-              };
-            } else if (inventory.action === 'checkin') {
-              // Item was returned
-              delete inventoryStatus[key];
-            } else if (inventory.action === 'update') {
-              // Item details were updated
-              if (inventoryStatus[key]) {
-                inventoryStatus[key] = {
-                  ...inventoryStatus[key],
-                  ...inventory,
-                  status: 'checked_out' // Still checked out, just updated
-                };
-              }
-            }
-          });
-        }
-      });
-      
-      // Return currently checked out items with proper structure
-      const inventoryItems = Object.values(inventoryStatus).map(inventory => {
-        // Create a structured inventory item
-        return {
-          ecssInventoryNo: inventory.ecssInventoryNo || '',
-          itemDescription: {
-            brand: inventory.itemDescription?.brand || '',
-            model: inventory.itemDescription?.model || '',
-            serialNumber: inventory.itemDescription?.serialNumber || ''
-          },
-          condition: inventory.condition || '',
-          notes: inventory.notes || '',
-          action: inventory.action || 'checkout',
-          status: inventory.status || 'checked_out',
-          checkoutDate: inventory.checkoutDate || '',
-          checkoutTime: inventory.checkoutTime || ''
-        };
-      });
-
-      console.log(`Current inventory for employee ${employeeInfo.name}:`, inventoryItems);
-      
-      return inventoryItems;
+      console.log("Forms found for employee123:", forms[0].inventories);
+      return forms;
     } catch (error) {
       console.error('Error getting current inventory by employee:', error);
       throw error;
     }
   }
 
-  async findByEmployee(collectionName, employeeInfo) {
+  async updateEmployeeInventory(collectionName, formData) {
     try {
+      // Validate required fields
+      if (!formData.name || !formData.email) {
+        throw new Error('Employee name and email are required');
+      }
+
       // Ensure connection is established
       await dbConnection.connect();
       const db = dbConnection.getDatabase();
       const collection = db.collection(collectionName);
       
-      // Build query to find forms for the employee
-      const query = {
-        $and: [
-          { 'submissionData.name': { $regex: new RegExp(employeeInfo.name, 'i') } },
-          { 'submissionData.email': { $regex: new RegExp(employeeInfo.email, 'i') } },
-          { 'submissionData.mobileNo': employeeInfo.mobileNo }
-        ]
-      };
+      // Check if employeeFormObjectId is provided for targeted update
+      if (formData.employeeFormObjectId) {
+        console.log('Updating specific form with ObjectId:', formData.employeeFormObjectId);
+        
+        // Validate ObjectId format
+        if (!ObjectId.isValid(formData.employeeFormObjectId)) {
+          throw new Error(`Invalid ObjectId format: ${formData.employeeFormObjectId}`);
+        }
+        
+        const documentId = new ObjectId(formData.employeeFormObjectId);
+        
+        // First, get the existing document to work with current inventories
+        const existingDocument = await collection.findOne({ _id: documentId });
+        if (!existingDocument) {
+          throw new Error(`No document found with ID: ${formData.employeeFormObjectId}`);
+        }
+        
+        // Get current inventories from the document (handle both field names)
+        let currentInventories = existingDocument.inventories || existingDocument._inventories || [];
+        console.log('Current inventories before update:', currentInventories);
+        
+        // Process new inventory items if provided
+        if (formData.inventories && formData.inventories.length > 0) {
+          // Separate items by action type
+          const checkoutItems = [];
+          const checkinItems = [];
+          const updateItems = [];
+          
+          formData.inventories.forEach(item => {
+            if (item.ecssInventoryNo && item.ecssInventoryNo.trim()) {
+              const inventoryItem = {
+                ecssInventoryNo: item.ecssInventoryNo.trim(),
+                itemDescription: item.itemDescription || '',
+                condition: item.condition,
+                notes: item.notes || '',
+                location: item.location || '',
+                updatedAt: new Date()
+              };
+
+              if (item.action === 'checkin') {
+                // Items being returned (checked in)
+                checkinItems.push({
+                  ...inventoryItem,
+                  action: 'checkin',
+                  returnDate: formData.date || new Date().toISOString().split('T')[0],
+                  returnTime: formData.time || new Date().toTimeString().split(' ')[0]
+                });
+              } else if (item.action === 'checkout') {
+                // New items being checked out
+                checkoutItems.push({
+                  ...inventoryItem,
+                  action: 'checkout',
+                  checkoutDate: formData.date || new Date().toISOString().split('T')[0],
+                  checkoutTime: formData.time || new Date().toTimeString().split(' ')[0]
+                });
+              } else {
+                // Items being updated (condition, notes, etc.)
+                updateItems.push({
+                  ...inventoryItem,
+                  action: item.action || 'update'
+                });
+              }
+            }
+          });
+          
+          console.log('Processing items:', {
+            checkoutItems: checkoutItems.length,
+            checkinItems: checkinItems.length,
+            updateItems: updateItems.length
+          });
+          
+          // Log details of items being processed
+          if (checkoutItems.length > 0) {
+            console.log('Checkout items:', checkoutItems.map(item => item.ecssInventoryNo));
+          }
+          if (checkinItems.length > 0) {
+            console.log('Checkin items:', checkinItems.map(item => item.ecssInventoryNo));
+          }
+          if (updateItems.length > 0) {
+            console.log('Update items:', updateItems.map(item => item.ecssInventoryNo));
+          }
+          
+          // Log current inventory items for comparison
+          console.log('Current inventory items:', currentInventories.map(item => item.ecssInventoryNo));
+          
+          // Start with current inventories
+          let updatedInventories = [...currentInventories];
+          
+          // Remove checked-in items from current inventory
+          if (checkinItems.length > 0) {
+            const checkinInventoryNos = checkinItems.map(item => item.ecssInventoryNo);
+            const itemsBeforeRemoval = updatedInventories.length;
+            
+            updatedInventories = updatedInventories.filter(item => 
+              !checkinInventoryNos.includes(item.ecssInventoryNo)
+            );
+            
+            const itemsRemoved = itemsBeforeRemoval - updatedInventories.length;
+            console.log(`Removed ${itemsRemoved} checked-in items from inventory`);
+            
+            // Log which items were successfully found and removed vs not found
+            checkinInventoryNos.forEach(inventoryNo => {
+              const wasInInventory = currentInventories.some(item => item.ecssInventoryNo === inventoryNo);
+              if (wasInInventory) {
+                console.log(`✓ Successfully returned item: ${inventoryNo}`);
+              } else {
+                console.log(`⚠ Warning: Item ${inventoryNo} was not found in current inventory`);
+              }
+            });
+          }
+          
+          // Add new checkout items to current inventory
+          if (checkoutItems.length > 0) {
+            // Check for duplicates before adding
+            checkoutItems.forEach(newItem => {
+              const existingIndex = updatedInventories.findIndex(item => 
+                item.ecssInventoryNo === newItem.ecssInventoryNo
+              );
+              if (existingIndex === -1) {
+                updatedInventories.push(newItem);
+                console.log(`Added new checkout item: ${newItem.ecssInventoryNo}`);
+              } else {
+                console.log(`Warning: Item ${newItem.ecssInventoryNo} already exists in inventory, skipping`);
+              }
+            });
+          }
+          
+          // Update existing items that aren't being returned or newly checked out
+          if (updateItems.length > 0) {
+            let updatedCount = 0;
+            let addedCount = 0;
+            
+            updateItems.forEach(updateItem => {
+              const existingIndex = updatedInventories.findIndex(item => 
+                item.ecssInventoryNo === updateItem.ecssInventoryNo
+              );
+              if (existingIndex !== -1) {
+                // Update the existing item with new data
+                updatedInventories[existingIndex] = {
+                  ...updatedInventories[existingIndex], // Keep any existing fields
+                  ...updateItem // Override with new data
+                };
+                console.log(`Updated existing item ${updateItem.ecssInventoryNo}`);
+                updatedCount++;
+              } else {
+                // Add item if it doesn't exist (treat as new assignment)
+                const newItem = {
+                  ...updateItem,
+                  action: 'checkout', // Change action to checkout since it's being added
+                  checkoutDate: formData.date || new Date().toISOString().split('T')[0],
+                  checkoutTime: formData.time || new Date().toTimeString().split(' ')[0]
+                };
+                updatedInventories.push(newItem);
+                console.log(`Added new item ${updateItem.ecssInventoryNo} (was marked for update but not found in inventory)`);
+                addedCount++;
+              }
+            });
+            console.log(`Updated ${updatedCount} existing items and added ${addedCount} new items to inventory`);
+          }
+          
+          currentInventories = updatedInventories;
+        }
+        
+        // Prepare update data
+        const updateData = {
+          $set: {
+            name: formData.name,
+            department: formData.department || existingDocument.department,
+            email: formData.email,
+            mobileNo: formData.mobileNo,
+            inventories: currentInventories, // Use consistent field name
+            date: formData.date || new Date().toISOString().split('T')[0],
+            time: formData.time || new Date().toTimeString().split(' ')[0],
+            formType: formData.formType || 'update',
+            lastUpdated: new Date()
+          }
+        };
+        
+        // Remove _inventories field if it exists to maintain consistency
+        if (existingDocument._inventories) {
+          updateData.$unset = { _inventories: "" };
+        }
+
+        const result = await collection.updateOne(
+          { _id: documentId },
+          updateData
+        );
+        
+        console.log('Employee inventory update result:', result);
+        console.log('Updated inventories count:', currentInventories.length);
+        
+        if (result.matchedCount === 0) {
+          throw new Error(`No document found with ID: ${formData.employeeFormObjectId}`);
+        }
+        
+        return {
+          _id: documentId,
+          matchedCount: result.matchedCount,
+          modifiedCount: result.modifiedCount,
+          inventoriesCount: currentInventories.length,
+          message: 'Employee inventory updated successfully',
+          updatedInventories: currentInventories
+        };
+      }
       
-      // Find all forms for this employee, sorted by most recent first
-      const forms = await collection.find(query).sort({ 'submissionData.date': -1 }).toArray();
-      console.log(`Found ${forms.length} forms for employee:`, employeeInfo);
+      // If no employeeFormObjectId provided, create a new form entry
+      console.log('Creating new form entry for employee inventory');
       
-      return forms;
+      // Check if this is primarily a return operation (checkin items)
+      const hasCheckinItems = formData.inventories && formData.inventories.some(item => item.action === 'checkin');
+      
+      if (hasCheckinItems) {
+        // For return operations without a form ID, we need to find the employee's existing form
+        console.log('Return operation detected, searching for existing employee form...');
+        
+        const query = {
+          name: formData.name,
+          email: formData.email,
+          mobileNo: formData.mobileNo,
+          formType: { $ne: 'return' } // Exclude return records from search
+        };
+        
+        // Find the most recent form for this employee
+        const existingForms = await collection.find(query).sort({ _id: -1 }).toArray();
+        
+        if (existingForms.length > 0) {
+          const existingForm = existingForms[0];
+          console.log('Found existing form for return operation:', existingForm._id);
+          
+          // Use the existing form ID and process as an update
+          formData.employeeFormObjectId = existingForm._id.toString();
+          
+          // Recursively call this method with the found form ID
+          return this.updateEmployeeInventory(collectionName, formData);
+        } else {
+          throw new Error(`Cannot process return: No existing checkout record found for employee ${formData.name}`);
+        }
+      } else {
+        // This is a new checkout operation, create a new form entry
+        const newFormData = {
+          name: formData.name,
+          department: formData.department || '',
+          email: formData.email,
+          mobileNo: formData.mobileNo,
+          inventories: [],
+          date: formData.date || new Date().toISOString().split('T')[0],
+          time: formData.time || new Date().toTimeString().split(' ')[0],
+          formType: formData.formType || 'checkout',
+          createdAt: new Date(),
+          lastUpdated: new Date()
+        };
+
+        // Process new inventory items for checkout
+        if (formData.inventories && formData.inventories.length > 0) {
+          const checkoutItems = [];
+          
+          formData.inventories.forEach(item => {
+            if (item.ecssInventoryNo && item.ecssInventoryNo.trim()) {
+              const inventoryItem = {
+                ecssInventoryNo: item.ecssInventoryNo.trim(),
+                itemDescription: item.itemDescription || '',
+                condition: item.condition || 'Good',
+                notes: item.notes || '',
+                location: item.location || '',
+                action: 'checkout',
+                checkoutDate: formData.date || new Date().toISOString().split('T')[0],
+                checkoutTime: formData.time || new Date().toTimeString().split(' ')[0],
+                updatedAt: new Date()
+              };
+              checkoutItems.push(inventoryItem);
+            }
+          });
+          
+          newFormData.inventories = checkoutItems;
+          console.log(`Creating new form with ${checkoutItems.length} checkout items`);
+        }
+
+        const result = await collection.insertOne(newFormData);
+        console.log('New form created successfully:', result.insertedId);
+        
+        return {
+          _id: result.insertedId,
+          inventoriesCount: newFormData.inventories.length,
+          message: 'New employee form created successfully',
+          updatedInventories: newFormData.inventories
+        };
+      }
     } catch (error) {
-      console.error('Error finding forms by employee:', error);
+      console.error('Error in updateEmployeeInventory:', error);
       throw error;
     }
   }

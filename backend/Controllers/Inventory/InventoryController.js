@@ -59,6 +59,65 @@ class InventoryController
     }
   }
 
+  async updateInventory(inventories, userName) {
+    try {
+      console.log('Updating inventory with inventories:', inventories);
+      console.log('User name:', userName);
+      
+      // Handle inventory updates based on inventories array
+      if (inventories && inventories.length > 0) {
+        const updatePromises = inventories.map(async (inventoryItem) => {
+          if (inventoryItem.ecssInventoryNo) {
+            // Get the existing inventory item data first
+            const existingItem = await this.inventoryDatabase.retrieveByAssetTag(inventoryItem.ecssInventoryNo);
+            
+            // Update existing inventory item by asset tag
+            const updateData = {
+              'Notes': inventoryItem.notes || '',
+              'Last Admendment On': new Date().toLocaleDateString('en-GB')
+            };
+
+            // Set fields based on action type
+            if (inventoryItem.action === 'checkin') {
+              // For check-in (return): use old data and set Location and Check-in Date
+              updateData['Location'] = inventoryItem.location || '';
+              updateData['Check-in Date'] = new Date().toLocaleDateString('en-GB');
+              updateData['Check-out Date'] = ''; // Clear check-out date on return";
+              updateData['Assigned User'] = ''; // Clear assigned user on return
+            } else if (inventoryItem.action !== 'checkin') {
+              // For check-out, update, or add new: set Assigned User and Check-out Date
+              updateData['Location'] =  '';
+              updateData['Assigned User'] = userName || '';
+              updateData['Check-out Date'] = new Date().toLocaleDateString('en-GB');
+              updateData['Check-in Date'] = ''; // Clear check-out date on return";
+            }
+            
+            return await this.inventoryDatabase.updateByAssetTag(inventoryItem.ecssInventoryNo, updateData);
+          }
+        });
+        
+        const results = await Promise.all(updatePromises.filter(promise => promise));
+        
+        return {
+          success: true,
+          message: 'Inventory updated successfully',
+          updatedItems: results.length
+        };
+      }
+      
+      return {
+        success: true,
+        message: 'No inventory items to update'
+      };
+    } catch (error) {
+      console.error('Error updating inventory:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
 }
 
 module.exports = InventoryController;

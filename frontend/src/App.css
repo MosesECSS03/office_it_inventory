@@ -823,7 +823,7 @@
 /* Table layout improvements - Fixed Column Widths */
 .checkin-checkout-table {
   width: 100%;
-  min-width: 1660px; /* Updated total: 200+220+200+180+150+250+130+250+80 = 1660px */
+  min-width: 1980px; /* Base total without location: 300+900+300+300+300+300+180 = 2580px. With location: +250px = 2830px */
   border-collapse: separate; /* Changed to separate for better border control */
   border-spacing: 0;
   font-size: 14px;
@@ -1009,6 +1009,16 @@
 
 .checkin-checkout-table th:nth-child(9),
 .checkin-checkout-table td:nth-child(9) {
+  width: 250px; /* Location - 250px width (conditional) */
+  min-width: 250px;
+  max-width: 250px;
+}
+
+/* Actions column - can be 9th (without location) or 10th (with location) */
+.checkin-checkout-table th:nth-child(9):last-child,
+.checkin-checkout-table td:nth-child(9):last-child,
+.checkin-checkout-table th:nth-child(10),
+.checkin-checkout-table td:nth-child(10) {
   width: 180px; /* Actions - exact button size */
   min-width: 180px;
   max-width: 180px;
@@ -1163,6 +1173,62 @@
 .table-container {
   position: relative;
   z-index: 1;
+}
+
+/* Location field styling for enabled/disabled states */
+.location-enabled {
+  background-color: #ffffff !important;
+  border-color: #28a745 !important;
+  color: #000000 !important;
+}
+
+.location-enabled:focus {
+  border-color: #20c997 !important;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25) !important;
+}
+
+.location-disabled {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #6c757d !important;
+}
+
+/* Return button styling */
+.return-btn {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-height: 44px;
+  padding: 12px 16px;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.return-btn:hover:not(:disabled) {
+  background: #138496;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.return-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.return-active {
+  background: #28a745 !important;
+}
+
+.return-active:hover:not(:disabled) {
+  background: #20c997 !important;
 }
 
 /* Bottom Section - Action Buttons */
@@ -1837,6 +1903,7 @@
 .add-row-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
+  transform: none;
 }
 
 .remove-row-btn {
@@ -1862,6 +1929,34 @@
 }
 
 .remove-row-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.delete-row-btn {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-height: 44px;
+  padding: 12px 16px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.delete-row-btn:hover:not(:disabled) {
+  background: #e55a2b;
+  transform: scale(1.1);
+}
+
+.delete-row-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
   transform: none;
@@ -2149,6 +2244,7 @@
   margin-bottom: 20px;
   font-size: 14px;
   line-height: 1.5;
+  color: #000000;
 }
 
 .letter-body {
@@ -2248,6 +2344,7 @@
 }
 
 /* Enhanced progress bar for PDF style */
+
 .checkin-checkout-table-modal .progress-container {
   margin: 20px 0;
   background: white;
@@ -2276,154 +2373,5 @@
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #ddd;
-}
-
-/* Enhanced Search Input Container - Completely Borderless */
-.search-input-container {
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.search-input {
-  flex: 1;
-  min-width: 0; /* Allow flex shrinking */
-  height: 44px; /* Fixed height to match table inputs */
-  border: none !important; /* Remove border */
-  background: transparent !important;
-  outline: none !important;
-  box-shadow: none !important;
-  padding: 12px 8px; /* Optimized padding for fixed width */
-  font-size: 14px;
-  font-weight: 500;
-  color: #000000 !important;
-  box-sizing: border-box;
-  margin: 0 !important; /* Remove any margin */
-}
-
-.search-input:focus {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: rgba(0, 86, 179, 0.08) !important;
-}
-
-.search-input::placeholder {
-  color: #888888;
-  font-weight: 400;
-  font-size: 13px;
-}
-
-/* Override any conflicting search input styles */
-.search-input-container .search-input {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
-}
-
-.search-input-container .search-input:focus {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: rgba(0, 86, 179, 0.08) !important;
-}
-
-/* Bottom Section - Action Buttons */
-.bottom-section {
-  margin-top: 2rem;
-}
-
-.action-buttons-container {
-  text-align: center;
-  padding: 2rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.action-buttons-container h3 {
-  margin-bottom: 1.5rem;
-  color: #ffffff;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.button-group {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.action-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 14px 28px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 200px;
-  justify-content: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.checkin-checkout-btn {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.checkin-checkout-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0056b3, #004085);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
-}
-
-.inventory-details-btn {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.inventory-details-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1e7e34, #155724);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-}
-
-.action-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.button-icon {
-  font-size: 18px;
-}
-
-@media (max-width: 768px) {
-  .button-group {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .action-button {
-    width: 100%;
-    max-width: 280px;
-  }
-  
-  .action-buttons-container {
-    padding: 1.5rem;
-  }
 }
 

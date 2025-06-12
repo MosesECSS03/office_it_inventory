@@ -1,13 +1,19 @@
 class FormItem {
   constructor()
   {
+    this._id = '';
     this._name = '';
     this._department = '';
     this._email = '';
     this._mobileNo = '';
-    this._inventories = [];
+    this.inventories = [];
     this._date = '';
     this._time = '';
+  }
+
+  // Getter methods
+  getId() {
+    return this._id;
   }
 
   // Getter methods
@@ -28,7 +34,7 @@ class FormItem {
   }
 
   getInventories() {
-    return this._inventories;
+    return this.inventories;
   }
 
   getDate() {
@@ -40,6 +46,10 @@ class FormItem {
   }
 
   // Setter methods
+  setId(_id) {
+    this._id = _id;
+  }
+
   setName(name) {
     this._name = name;
   }
@@ -57,7 +67,7 @@ class FormItem {
   }
 
   setInventories(inventories) {
-    this._inventories = inventories;
+    this.inventories = inventories;
   }
 
   setDate(date) {
