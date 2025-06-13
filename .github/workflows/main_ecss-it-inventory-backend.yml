@@ -1,4 +1,4 @@
-name: ECSS Backend Node
+name: ECSS IT Inventory Management System - Node
 
 on:
   push:
@@ -26,52 +26,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1FBDDC1349314EE598D02426BE106C4B }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_61237747A91C44DAB298134C220B8DF7 }}
 
+
       - name: Set the correct Azure subscription
         run: |
           az account set --subscription ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_61237747A91C44DAB298134C220B8DF7 }}
-
-      - name: Check if a deployment is in progress for ecss-it-inventory-backend on Azure Linux
-        run: |
-            echo "Checking for active deployment process for ecss-it-inventory-backend..."
-            RESOURCE_GROUP="ECSS-Course-Management-System"
-            DEPLOYMENT_STATUS=$(az webapp show --name ecss-it-inventory-backend --resource-group $RESOURCE_GROUP --query "state" -o tsv)
-        
-            echo "Current deployment status: $DEPLOYMENT_STATUS"  # Show the deployment status
-        
-            if [ "$DEPLOYMENT_STATUS" == "Running" ]; then
-              echo "Deployment is already in progress for ecss-it-inventory-backend. Exiting early."
-              echo "::set-output name=deployment_in_progress::true"  # Set the output variable to indicate deployment is in progress
-            else
-              echo "No deployment in progress for ecss-it-inventory-backend. Proceeding with build."
-              echo "::set-output name=deployment_in_progress::false"  # Set the output variable to indicate no deployment in progress
-            fi
-        
-      - name: Fetch previous commit (before push)
-        #if: ${{ steps.check_changes.deployment_in_progress == 'false' }}
-        run: |
-          git fetch origin main --depth=2
-          echo "Before push commit:"
-          git log --oneline -n 2  # Show the last 2 commits
-
-      - name: Check for changes in the backend folder between before and after push
-        #if: ${{ steps.check_changes.odeployment_in_progress == 'false' }}
-        id: check_changes
-        run: |
-          echo "Checking for changes in the backend folder between before and after push..."
-          git fetch origin main --depth=2  # Fetch the last 2 commits
-          CHANGES=$(git diff --name-only HEAD~1 HEAD -- backend/)
-
-          if [ -z "$CHANGES" ]; then
-            echo "No changes detected in the backend folder. Skipping build and deploy."
-            echo "::set-output name=changes_detected::false"
-          else
-            echo "Changes detected in the backend folder. Proceeding with build and deploy."
-            echo "::set-output name=changes_detected::true"
-          fi
-
-      - name: Debug changes detected
-        #if: ${{ steps.check_changes.outputs.changes_detected == 'true' }}  
-        run: 'echo "Changes detected: ${{ steps.check_changes.outputs.changes_detected }}"'
 
       - name: Set up Node.js version
         #if: ${{steps.check_changes.outputs.changes_detected == 'true' }}  
