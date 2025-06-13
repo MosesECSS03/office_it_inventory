@@ -13,7 +13,7 @@ import InventoryDetailsButtonComponent from '../components/InventoryDetailsButto
 import FooterComponent from '../components/FooterComponent'
 
 class MainPage extends Component {
-  constructor(props) {
+    constructor(props) {
     super(props);
     this.state = {
       appTitle: 'Office IT Inventory System',
