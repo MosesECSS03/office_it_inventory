@@ -1,4 +1,4 @@
-name: ECSS Backend Node
+name: ECSS IT Inventory Management System (Backend) - Node
 
 on:
   push:

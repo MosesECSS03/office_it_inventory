@@ -1,4 +1,4 @@
-name: ECSS IT Inventory Management System - React + Vite
+name: ECSS IT Inventory Management System (Frontend) - React + Vite
 
 on:
   push:
