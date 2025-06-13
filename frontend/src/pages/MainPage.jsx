@@ -34,10 +34,11 @@ class MainPage extends Component {
   componentDidMount() {
     // Initialize data when component mounts
     this.initializeData();
+      const baseURL = `${window.location.hostname === "localhost" ? "http://localhost:3001" : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
     
     // Connect to socket
-    this.socket = io('http://localhost:3001');
- 
+    this.socket = io(baseURL);
+
     this.socket.on('inventory-updated', (data) => {
       console.log("Socket event received", data);
       this.initializeData();
