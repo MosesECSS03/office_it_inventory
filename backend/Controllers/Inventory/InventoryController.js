@@ -1,5 +1,6 @@
 const InventoryItem = require('../../Entities/Inventory/InventoryItem');
 const InventoryDatabase = require('../../Database/Inventory/InventoryDatabase');
+const { formatDateForFrontend, formatDateForDatabase } = require('../../utils/dateUtils');
 
 class InventoryController 
 {
@@ -16,33 +17,33 @@ class InventoryController
       const inventoryItems = items.map(item => {
         const inventoryItem = new InventoryItem();
         
-        // Set all properties using setters
+        // Set all properties using setters with date formatting
         inventoryItem.setCategory(item.Category);
         inventoryItem.setBrand(item.Brand);
         inventoryItem.setModel(item.Model);
         inventoryItem.setSerialNumber(item['Serial Number']);
-        inventoryItem.setPurchaseDate(item['Purchase Date']);
+        inventoryItem.setPurchaseDate(formatDateForFrontend(item['Purchase Date']));
         inventoryItem.setOriginalPrice(item['Original Price']);
         inventoryItem.setCurrentNetBookValue(item[' Current Net Book Value']);
         inventoryItem.setDurationSincePurchase(item['Duration since Purchase (mth) ']);
         inventoryItem.setWarrantyInformation(item['Warranty Information']);
-        inventoryItem.setWarrantyStartDate(item['Warranty Start Date']);
-        inventoryItem.setWarrantyEndDate(item['Warranty End Date']);
+        inventoryItem.setWarrantyStartDate(formatDateForFrontend(item['Warranty Start Date']));
+        inventoryItem.setWarrantyEndDate(formatDateForFrontend(item['Warranty End Date']));
         inventoryItem.setAssignedUser(item['Assigned User']);
         inventoryItem.setLocation(item.Location);
         inventoryItem.setAssetsIdTag(item['Assets ID Tag']);
         inventoryItem.setStatus(item.Status);
-        inventoryItem.setCheckInDate(item['Check-in Date']);
-        inventoryItem.setCheckOutDate(item['Check-out Date']);
+        inventoryItem.setCheckInDate(formatDateForFrontend(item['Check-in Date']));
+        inventoryItem.setCheckOutDate(formatDateForFrontend(item['Check-out Date']));
         inventoryItem.setOsType(item['OS Type']);
         inventoryItem.setOsVersion(item['OS Version']);
-        inventoryItem.setDate(item.Date);
+        inventoryItem.setDate(formatDateForFrontend(item.Date));
         inventoryItem.setTime(item.Time);
         inventoryItem.setIpAddressIPv4(item['IP address (IPv4)']);
         inventoryItem.setIpAddressIPv6(item['IP address (IPv6)']);
         inventoryItem.setMacAddress(item['MAC address']);
         inventoryItem.setNotes(item.Notes);
-        inventoryItem.setLastAmendmentOn(item['Last Admendment On']);
+        inventoryItem.setLastAmendmentOn(formatDateForFrontend(item['Last Admendment On']));
         
         return inventoryItem;
       });

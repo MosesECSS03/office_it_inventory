@@ -3,8 +3,24 @@ const cors = require('cors');
 
 const app = express();
 
+// Enhanced CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:5173', // Vite dev server
+    'http://localhost:3000', // React dev server fallback
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'https://ecss-it-inventory-frontend.azurewebsites.net', // Your Azure frontend
+    // Add any other domains where your frontend might be hosted
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

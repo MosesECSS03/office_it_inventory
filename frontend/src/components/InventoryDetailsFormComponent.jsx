@@ -1,7 +1,18 @@
 import React, { Component } from 'react'
 import axios from 'axios'
 
- const baseURL = `${window.location.hostname === "localhost" ? "http://localhost:3001" : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
+ const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+  ? "http://localhost:3001" 
+  : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
+
+// Import date utilities
+import { formatDateForInput, formatDateForDisplay } from '../utils/dateUtils';
+
+console.log('Current environment:', {
+  hostname: window.location.hostname,
+  protocol: window.location.protocol,
+  baseURL: baseURL
+});
 
 class InventoryDetailsFormComponent extends Component {
   constructor(props) {
@@ -208,39 +219,16 @@ class InventoryDetailsFormComponent extends Component {
         return dateStr;
       }
       
-      // Handle DD/MM/YYYY format (like "16/05/2025")
+      // Handle DD/MM/YYYY format (like "16/05/2025" or "13/06/2025")
       if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
         const parts = dateStr.split('/');
-        const firstPart = parseInt(parts[0]);
-        const secondPart = parseInt(parts[1]);
-        
-        // If first part > 12, it's likely DD/MM/YYYY
-        if (firstPart > 12) {
-          const day = parts[0].padStart(2, '0');
-          const month = parts[1].padStart(2, '0');
-          const year = parts[2];
-          const result = `${year}-${month}-${day}`;
-          console.log('DD/MM/YYYY format (first > 12) converted to:', result);
-          return result;
-        }
-        // If second part > 12, it's likely MM/DD/YYYY
-        else if (secondPart > 12) {
-          const month = parts[0].padStart(2, '0');
-          const day = parts[1].padStart(2, '0');
-          const year = parts[2];
-          const result = `${year}-${month}-${day}`;
-          console.log('MM/DD/YYYY format (second > 12) converted to:', result);
-          return result;
-        }
-        // Default to DD/MM/YYYY for ambiguous cases
-        else {
-          const day = parts[0].padStart(2, '0');
-          const month = parts[1].padStart(2, '0');
-          const year = parts[2];
-          const result = `${year}-${month}-${day}`;
-          console.log('Ambiguous date, defaulting to DD/MM/YYYY:', result);
-          return result;
-        }
+        // Always assume DD/MM/YYYY format as per your requirement
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2];
+        const result = `${year}-${month}-${day}`;
+        console.log('DD/MM/YYYY format converted to:', result);
+        return result;
       }
       
       // Handle DD-MM-YYYY format (with dashes)
@@ -444,28 +432,28 @@ class InventoryDetailsFormComponent extends Component {
         console.log('Cleaned price string:', cleanPrice);
       }
       
-      // Convert dates to proper input format with enhanced debugging - ENSURE STRING OUTPUT
+      // Convert dates to proper input format using utility function
       const rawPurchaseDate = selectedItem['Purchase Date'] || selectedItem._purchaseDate || '';
       const rawDate = selectedItem.Date || selectedItem._date || '';
       
       console.log('Raw purchase date:', rawPurchaseDate);
       console.log('Raw date:', rawDate);
       
-      // Force conversion to string and ensure proper formatting
+      // Use utility function for consistent date conversion
       let purchaseDate = '';
       let date = '';
       
       if (rawPurchaseDate && rawPurchaseDate !== '') {
-        purchaseDate = String(this.convertDateToInputFormat(rawPurchaseDate));
+        purchaseDate = formatDateForInput(rawPurchaseDate);
         console.log('Converted purchase date:', purchaseDate);
       }
       
       if (rawDate && rawDate !== '') {
-        date = String(this.convertDateToInputFormat(rawDate));
+        date = formatDateForInput(rawDate);
         console.log('Converted date:', date);
       }
       
-      // Check all date fields for debugging - force string conversion
+      // Check all date fields for debugging
       const rawCheckInDate = selectedItem['Check-in Date'] || selectedItem._checkInDate || '';
       const rawCheckOutDate = selectedItem['Check-out Date'] || selectedItem._checkOutDate || '';
       
@@ -473,11 +461,11 @@ class InventoryDetailsFormComponent extends Component {
       let checkOutDate = '';
       
       if (rawCheckInDate && rawCheckInDate !== '') {
-        checkInDate = String(this.convertDateToInputFormat(rawCheckInDate));
+        checkInDate = formatDateForInput(rawCheckInDate);
       }
       
       if (rawCheckOutDate && rawCheckOutDate !== '') {
-        checkOutDate = String(this.convertDateToInputFormat(rawCheckOutDate));
+        checkOutDate = formatDateForInput(rawCheckOutDate);
       }
       
       console.log('Check-in date - Raw:', rawCheckInDate, 'Converted:', checkInDate);
@@ -512,18 +500,18 @@ class InventoryDetailsFormComponent extends Component {
       console.log('Purchase Date type and value:', typeof formData.purchaseDate, formData.purchaseDate);
       console.log('Date type and value:', typeof formData.date, formData.date);
   
-      // Convert warranty dates too - ENSURE STRINGS
+      // Convert warranty dates using utility function
       const warrantyInfo = String(selectedItem['Warranty Information'] || selectedItem._warrantyInformation || '');
       const rawWarrantyStartDate = selectedItem['Warranty Start Date'] || selectedItem._warrantyStartDate || '';
       let warrantyStartDate = '';
       
       if (rawWarrantyStartDate && rawWarrantyStartDate !== '') {
-        warrantyStartDate = String(this.convertDateToInputFormat(rawWarrantyStartDate));
+        warrantyStartDate = formatDateForInput(rawWarrantyStartDate);
       }
 
-      console.log('Raw warranty start date:', warrantyStartDate);
+      console.log('Raw warranty start date:', rawWarrantyStartDate);
 
-      const warrantyEndDate = this.convertDateToInputFormat(selectedItem['Warranty End Date'] || selectedItem._warrantyEndDate || '');
+      const warrantyEndDate = formatDateForInput(selectedItem['Warranty End Date'] || selectedItem._warrantyEndDate || '');
 
       console.log('Warranty info:', warrantyInfo);
       console.log('Warranty start date - Raw:', rawWarrantyStartDate, 'Converted:', warrantyStartDate);
