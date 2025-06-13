@@ -59,6 +59,67 @@ class InventoryController
     }
   }
 
+  async createInventoryItem(inventoryData) {
+    try {
+      console.log('Creating new inventory item:', inventoryData);
+      
+      // Add timestamp fields
+      const dataWithTimestamps = {
+        ...inventoryData,
+        'Last Admendment On': new Date().toLocaleDateString('en-GB')
+      };
+      
+      const result = await this.inventoryDatabase.save(dataWithTimestamps);
+      
+      return {
+        success: true,
+        message: 'Inventory item created successfully',
+        data: result
+      };
+    } catch (error) {
+      console.error('Error creating inventory item:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async updateInventoryItem(inventoryData) {
+    try {
+      console.log('Updating inventory item by serial number:', inventoryData['Serial Number'], inventoryData);
+      
+      // Extract serial number from the data
+      const serialNumber = inventoryData['Serial Number'];
+      if (!serialNumber) {
+        throw new Error('Serial Number is required for updating inventory item');
+      }
+      
+      // Add timestamp fields
+     const dataWithTimestamps = {
+        ...inventoryData,
+        'Last Admendment On': new Date().toLocaleDateString('en-GB'),
+        updatedAt: new Date()
+      };
+
+      console.log('Data with timestamps:', dataWithTimestamps);
+      
+      const result = await this.inventoryDatabase.updateInvetoryBySerialNumber(dataWithTimestamps);
+      
+      return {
+        success: true,
+        message: 'Inventory item updated successfully',
+        data: result
+      };
+    } catch (error) {
+      console.error('Error updating inventory item:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   async updateInventory(inventories, userName) {
     try {
       console.log('Updating inventory with inventories:', inventories);
@@ -118,6 +179,53 @@ class InventoryController
     }
   }
 
+  async deleteInventoryItemBySerialNumber(serialNumber) {
+    try {
+      console.log('Deleting inventory item by serial number:', serialNumber);
+      
+      if (!serialNumber) {
+        throw new Error('Serial Number is required for deleting inventory item');
+      }
+      
+      const result = await this.inventoryDatabase.deleteBySerialNumber(serialNumber);
+      
+      return {
+        success: true,
+        message: `Inventory item with serial number "${serialNumber}" deleted successfully`,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error deleting inventory item by serial number:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+  
+  async deleteInventoryItemByAssetsTag(assetsIdTag) {
+    try {
+      console.log('Deleting inventory item by assets ID tag:', assetsIdTag);
+      
+      if (!assetsIdTag) {
+        throw new Error('Assets ID Tag is required for deleting inventory item');
+      }
+      
+      const result = await this.inventoryDatabase.deleteByAssetsTag(assetsIdTag);
+      
+      return {
+        success: true,
+        message: `Inventory item with assets ID tag "${assetsIdTag}" deleted successfully`,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error deleting inventory item by assets ID tag:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }
 
 module.exports = InventoryController;

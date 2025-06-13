@@ -126,27 +126,6 @@ class InventoryDatabase {
   }
 
   /**
-   * Retrieve inventory items by category/type
-   * @param {string} category - The category/type
-   * @returns {Promise<Array>} Array of inventory items for the category
-   */
-  async retrieveByCategory(category) {
-    try {
-      // Ensure connection is established
-      await dbConnection.connect();
-      const db = dbConnection.getDatabase();
-      const collection = db.collection(this.collectionName);
-      
-      const items = await collection.find({ "Category": new RegExp(category, 'i') }).toArray();
-      console.log('Retrieved inventory items for category:', category, 'Count:', items.length);
-      return items;
-    } catch (error) {
-      console.error('Error retrieving inventory items by category:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Search inventory items by multiple criteria
    * @param {Object} searchCriteria - Search criteria object
    * @returns {Promise<Array>} Array of matching inventory items
@@ -164,22 +143,6 @@ class InventoryDatabase {
         query["Assets ID Tag"] = new RegExp(searchCriteria.assetTag, 'i');
       }
       
-      if (searchCriteria.brand) {
-        query["Brand"] = new RegExp(searchCriteria.brand, 'i');
-      }
-      
-      if (searchCriteria.model) {
-        query["Model"] = new RegExp(searchCriteria.model, 'i');
-      }
-      
-      if (searchCriteria.serialNumber) {
-        query["Serial Number"] = new RegExp(searchCriteria.serialNumber, 'i');
-      }
-      
-      if (searchCriteria.category) {
-        query["Category"] = new RegExp(searchCriteria.category, 'i');
-      }
-      
       const items = await collection.find(query).toArray();
       console.log('Search completed with criteria:', searchCriteria, 'Results:', items.length);
       return items;
@@ -195,7 +158,7 @@ class InventoryDatabase {
    * @param {Object} updateData - The data to update
    * @returns {Promise<Object>} The updated inventory item
    */
-  async update(itemId, updateData) {
+  async updateInvetoryBySerialNumber(updateData) {
     try {
       // Ensure connection is established
       await dbConnection.connect();
@@ -208,12 +171,12 @@ class InventoryDatabase {
       };
       
       const result = await collection.findOneAndUpdate(
-        { _id: new ObjectId(itemId) },
+         { "Serial Number": updateData['Serial Number'] },
         { $set: updateWithTimestamp },
         { returnDocument: 'after' }
       );
-      
-      console.log('Inventory item updated successfully:', itemId);
+
+      console.log('Inventory item updated successfully:', updateData['Serial Number']);
       return result.value;
     } catch (error) {
       console.error('Error updating inventory item:', error);
@@ -434,6 +397,46 @@ class InventoryDatabase {
     } catch (error) {
       console.error('Error performing bulk update:', error);
       throw error;
+    }
+  }
+
+  async deleteBySerialNumber(serialNumber) {
+    try {
+      // Ensure connection is established
+      await dbConnection.connect();
+      const db = dbConnection.getDatabase();
+      const collection = db.collection(this.collectionName);
+      
+      const result = await collection.deleteOne({ "Serial Number": serialNumber });
+      console.log('Inventory item deletion by serial number result:', result.deletedCount > 0);
+      return result.deletedCount > 0;
+    } catch (error) {
+      console.error('Error deleting inventory item by serial number:', error);
+      throw error;
+    }
+  }
+
+  async deleteInventoryItemByAssetsTag(assetsIdTag) {
+    try {
+      console.log('Deleting inventory item by assets ID tag:', assetsIdTag);
+      
+      if (!assetsIdTag) {
+        throw new Error('Assets ID Tag is required for deleting inventory item');
+      }
+      
+      const result = await this.inventoryDatabase.deleteByAssetTag(assetsIdTag);
+      
+      return {
+        success: true,
+        message: `Inventory item with assets ID tag "${assetsIdTag}" deleted successfully`,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error deleting inventory item by assets ID tag:', error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
   }
 }

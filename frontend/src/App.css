@@ -1347,7 +1347,7 @@
   border: 2px solid #e0e0e0;
   border-radius: 16px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4); /* Stronger shadow */
-  max-width: 90vw;
+  width: 90vw !important;
   max-height: 90vh;
   overflow-y: auto;
   overflow-x: visible;
@@ -1371,6 +1371,49 @@
 
 .inventory-details-modal {
   width: 700px;
+}
+
+/* Inventory Details Modal Font Visibility Fixes */
+.inventory-details-modal .modal-body {
+  color: #1a1a1a !important; /* Force dark text */
+  background: #ffffff !important; /* Force white background */
+}
+
+.inventory-details-modal .page-title,
+.inventory-details-modal h3,
+.inventory-details-modal h4,
+.inventory-details-modal h5,
+.inventory-details-modal p,
+.inventory-details-modal label,
+.inventory-details-modal span {
+  color: #1a1a1a !important; /* Force dark text for all text elements */
+}
+
+.inventory-details-modal .form-control,
+.inventory-details-modal input,
+.inventory-details-modal textarea,
+.inventory-details-modal select {
+  color: #1a1a1a !important; /* Force dark text in form controls */
+  background: #ffffff !important; /* Force white background in form controls */
+}
+
+.inventory-details-modal .dropdown-list,
+.inventory-details-modal .dropdown-item {
+  color: #1a1a1a !important; /* Force dark text in dropdown */
+  background: #ffffff !important; /* Force white background in dropdown */
+}
+
+.inventory-details-modal .existing-item-card {
+  color: #1a1a1a !important; /* Force dark text in item cards */
+  background: #ffffff !important; /* Force white background in item cards */
+}
+
+.inventory-details-modal .tab-button {
+  color: #1a1a1a !important; /* Force dark text in tabs */
+}
+
+.inventory-details-modal .tab-button.active {
+  color: #ffffff !important; /* Keep white text on active tab */
 }
 
 .modal-header {
@@ -1630,6 +1673,7 @@
 .form-page {
   min-height: 300px;
   animation: pageSlideIn 0.3s ease-out;
+
 }
 
 .page-title {
@@ -2373,5 +2417,282 @@
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #ddd;
+}
+
+/* Inventory Details Modal Tabbed Form Styles */
+.inventory-details-modal .sample-form-tabs {
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.inventory-details-modal .sample-tab-buttons {
+  display: flex;
+  gap: 0;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  padding: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.inventory-details-modal .sample-tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: #6c757d !important;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 70px;
+  position: relative;
+}
+
+.inventory-details-modal .sample-tab-button:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: #2196F3 !important;
+  transform: translateY(-2px);
+}
+
+.inventory-details-modal .sample-tab-button.active {
+  background: #2196F3;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  transform: translateY(-2px);
+}
+
+.inventory-details-modal .tab-icon {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.inventory-details-modal .tab-text {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inventory-details-modal .tab-subtitle {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Form Fields Styling */
+.inventory-details-modal .vertical-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #fafbfc;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.inventory-details-modal .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inventory-details-modal .form-field label {
+  font-weight: 600 !important;
+  color: #495057 !important;
+  font-size: 0.9rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.inventory-details-modal .vertical-input,
+.inventory-details-modal .vertical-textarea {
+  width: 100%;
+  padding: 0.875rem;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: #ffffff !important;
+  color: #212529 !important;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.inventory-details-modal .vertical-input:focus,
+.inventory-details-modal .vertical-textarea:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+  background: #ffffff !important;
+}
+
+.inventory-details-modal .vertical-input.auto-populated,
+.inventory-details-modal .vertical-textarea.auto-populated {
+  background: #f0f8ff !important;
+  border-color: #4CAF50 !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.inventory-details-modal .vertical-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Navigation Buttons */
+.inventory-details-modal .sample-form-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.inventory-details-modal .nav-button {
+  padding: 10px 20px;
+  border: 2px solid #2196F3;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2196F3 !important;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.inventory-details-modal .nav-button:hover:not(:disabled) {
+  background: #2196F3;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.inventory-details-modal .nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  border-color: #dee2e6;
+  color: #6c757d !important;
+}
+
+.inventory-details-modal .tab-indicator {
+  font-weight: 600;
+  color: #495057 !important;
+  font-size: 0.9rem;
+}
+
+/* Detail Section Styling */
+.inventory-details-modal .detail-section {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.inventory-details-modal .section-title {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #2c3e50 !important;
+  margin-bottom: 1.5rem !important;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .inventory-details-modal .sample-tab-buttons {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .inventory-details-modal .sample-tab-button {
+    min-width: calc(33.333% - 3px);
+    min-height: 60px;
+  }
+  
+  .inventory-details-modal .tab-icon {
+    font-size: 16px;
+  }
+  
+  .inventory-details-modal .tab-text {
+    font-size: 10px;
+  }
+  
+  .inventory-details-modal .tab-subtitle {
+    font-size: 9px;
+  }
+}
+
+/* Enhanced Card Styling */
+.inventory-details-modal .existing-item-card.sample-card {
+  background: #ffffff !important;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.inventory-details-modal .existing-item-card.sample-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Search Container Styling */
+.inventory-details-modal .search-container {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.inventory-details-modal .combo-box-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Dropdown Styling */
+.inventory-details-modal .dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff !important;
+  border: 2px solid #2196F3;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.inventory-details-modal .dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f3f4;
+  transition: all 0.2s ease;
+  color: #212529 !important;
+  background: #ffffff !important;
+}
+
+.inventory-details-modal .dropdown-item:hover {
+  background: #e3f2fd !important;
+  color: #1976d2 !important;
+  padding-left: 20px;
+}
+
+.inventory-details-modal .dropdown-item:last-child {
+  border-bottom: none;
 }
 

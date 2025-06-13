@@ -10,6 +10,7 @@ import CheckinCheckoutFormComponent from '../components/CheckinCheckoutFormCompo
 import InventoryDetailsFormComponent from '../components/InventoryDetailsFormComponent'
 import CheckinCheckoutButtonComponent from '../components/CheckinCheckoutButtonComponent'
 import InventoryDetailsButtonComponent from '../components/InventoryDetailsButtonComponent'
+import FooterComponent from '../components/FooterComponent'
 
 class MainPage extends Component {
   constructor(props) {
@@ -25,7 +26,8 @@ class MainPage extends Component {
       currentDateTime: new Date(),
       lastUpdated: new Date(),
       showCheckinCheckoutForm: false,
-      showInventoryDetailsForm: false
+      showInventoryDetailsForm: false,
+      editInventoryItem: null // Add state for item being edited
     };
   }
 
@@ -105,10 +107,22 @@ class MainPage extends Component {
     this.setState({ showCheckinCheckoutForm: true });
   }
 
-  // Handle IT Inventory Details Form button click
+  // Handle IT Inventory Details Form button click (for new items)
   handleInventoryDetailsForm = () => {
     console.log('IT Inventory Details Form clicked');
-    this.setState({ showInventoryDetailsForm: true });
+    this.setState({ 
+      showInventoryDetailsForm: true,
+      editInventoryItem: null // Clear any existing edit item
+    });
+  }
+
+  // Handle editing an existing inventory item
+  handleEditInventoryItem = (item) => {
+    console.log('Edit inventory item clicked:', item);
+    this.setState({ 
+      showInventoryDetailsForm: true,
+      editInventoryItem: item
+    });
   }
 
   // Handle closing Checkin/Checkout form
@@ -118,17 +132,20 @@ class MainPage extends Component {
 
   // Handle closing Inventory Details form
   handleCloseInventoryDetailsForm = () => {
-    this.setState({ showInventoryDetailsForm: false });
+    this.setState({ 
+      showInventoryDetailsForm: false,
+      editInventoryItem: null // Clear edit item when closing
+    });
   }
 
-  // Handle successful form submissions (no auto-refresh)
+  // Handle successful form submissions (auto-refresh enabled for inventory changes)
   handleFormSuccess = () => {
-    // Auto-refresh disabled - user can manually refresh if needed
-    console.log('Form submitted successfully - auto-refresh is disabled');
+    console.log('Form submitted successfully - refreshing inventory data');
+    this.initializeData(); // Refresh the data when inventory is updated
   }
 
   render() {
-    const { appTitle, timeZone, statisticsData, inventoryData, filteredInventoryData, isLoading, currentDateTime, lastUpdated, showCheckinCheckoutForm, showInventoryDetailsForm } = this.state;
+    const { appTitle, timeZone, statisticsData, inventoryData, filteredInventoryData, isLoading, currentDateTime, lastUpdated, showCheckinCheckoutForm, showInventoryDetailsForm, editInventoryItem } = this.state;
 
     return (
       <div className="app-container">
@@ -165,6 +182,7 @@ class MainPage extends Component {
             <InventoryTableComponent 
               data={filteredInventoryData} // Use filtered data for table
               isLoading={isLoading}
+              onEditItem={this.handleEditInventoryItem} // Pass edit handler
             />
           </div>
         </div>
@@ -187,9 +205,7 @@ class MainPage extends Component {
           </div>
         </div>
       </div>
-      <footer className="app-footer">
-        <div className="footer-spacer"></div>
-      </footer>
+      <FooterComponent />
 
       {/* Modal Forms */}
       <CheckinCheckoutFormComponent
@@ -201,6 +217,8 @@ class MainPage extends Component {
       
       <InventoryDetailsFormComponent
         isVisible={showInventoryDetailsForm}
+        data={inventoryData}
+        editInventoryItem={editInventoryItem}
         onClose={this.handleCloseInventoryDetailsForm}
         onSuccess={this.handleFormSuccess}
       />
