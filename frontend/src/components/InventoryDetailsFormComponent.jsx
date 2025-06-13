@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import axios from 'axios'
 
+ const baseURL = `${window.location.hostname === "localhost" ? "http://localhost:3001" : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
+
 class InventoryDetailsFormComponent extends Component {
   constructor(props) {
     super(props);
@@ -955,7 +957,6 @@ class InventoryDetailsFormComponent extends Component {
   // Axios method for creating new inventory item
   createInventoryItem = async (inventoryData) => {
     try {
-      const baseURL = 'http://localhost:3001';
       const response = await axios.post(`${baseURL}/inventory`, {
         purpose: 'create',
         data: inventoryData
@@ -971,7 +972,6 @@ class InventoryDetailsFormComponent extends Component {
   // Axios method for updating existing inventory item using Serial Number
   updateInventoryItem = async (inventoryData) => {
     try {
-      const baseURL = 'http://localhost:3001';
       const response = await axios.post(`${baseURL}/inventory`, {
         purpose: 'update',
         data: inventoryData
@@ -1259,7 +1259,6 @@ class InventoryDetailsFormComponent extends Component {
   // Axios method for deleting inventory item using Serial Number or Assets ID Tag
   deleteInventoryItem = async (identifier, identifierType = 'serialNumber') => {
     try {
-      const baseURL = 'http://localhost:3001';
       const requestData = {
         purpose: 'delete'
       };

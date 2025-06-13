@@ -61,7 +61,7 @@ class MainPage extends Component {
       this.setState({ isLoading: true });
 
       // Base URL for the backend API
-      const baseURL = 'http://localhost:3001';
+      const baseURL = `${window.location.hostname === "localhost" ? "http://localhost:3001" : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
 
       // Make parallel requests to get both inventory data and statistics
       const inventoryResponse = await axios.post(`${baseURL}/inventory`, {

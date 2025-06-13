@@ -188,8 +188,8 @@ class CheckinCheckoutFormComponent extends Component {
     const { employeeDetails } = this.state;
     
     try {
-      const baseURL = 'http://localhost:3001';
-      
+      const baseURL = `${window.location.hostname === "localhost" ? "http://localhost:3001" : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
+
       const employeeInfo = {
         name: employeeDetails.name.trim(),
         email: employeeDetails.email.trim(),
@@ -334,7 +334,7 @@ class CheckinCheckoutFormComponent extends Component {
     const { employeeDetails } = this.state;
     
     try {
-      const baseURL = 'http://localhost:3001';
+      const baseURL = `${window.location.hostname === "localhost" ? "http://localhost:3001" : "https://ecss-backend-node.azurewebsites.net"}`;
       
       // Prepare employee info for the backend
       const employeeInfo = {
@@ -851,7 +851,7 @@ class CheckinCheckoutFormComponent extends Component {
     this.setState({ isSubmitting: true, errors: {} });
 
     try {
-      const baseURL = 'http://localhost:3001';
+      const baseURL = `${window.location.hostname === "localhost" ? "http://localhost:3001" : "https://ecss-backend-node.azurewebsites.net"}`;
       
       // Get current date and time
       const now = new Date();
