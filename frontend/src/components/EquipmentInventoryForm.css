@@ -34,6 +34,10 @@
   border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
   border-radius: 12px 12px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header h2 {
@@ -115,11 +119,11 @@
 }
 
 /* Existing Items Section */
-.existing-items-container {
+.equipment-existing-items-section {
   margin-bottom: 32px;
 }
 
-.page-title {
+.equipment-existing-items-title {
   font-size: 18px;
   font-weight: 600;
   color: #1f2937;
@@ -127,23 +131,18 @@
 }
 
 /* Search Section */
-.search-container {
+.equipment-search-section {
   margin-bottom: 32px;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
+.equipment-search-title {
+  font-size: 14px;
   font-weight: 500;
   color: #374151;
-  font-size: 14px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-.form-control {
+.equipment-search-input {
   width: 100%;
   height: 44px;
   padding: 12px 16px;
@@ -157,24 +156,38 @@
   box-sizing: border-box;
 }
 
-.form-control:focus {
+.equipment-search-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.form-control::placeholder {
+.equipment-search-input::placeholder {
   color: #9ca3af;
 }
 
-/* Icon Tab Section for Sample Form */
-.sample-tab-buttons {
+.equipment-search-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.equipment-search-hint::before {
+  content: "💡";
+  font-size: 12px;
+}
+
+/* Icon Tab Section */
+.equipment-icon-tabs {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   margin-bottom: 32px;
 }
 
-.sample-tab-button {
+.equipment-icon-tab {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -190,24 +203,24 @@
   position: relative;
 }
 
-.sample-tab-button:hover {
+.equipment-icon-tab:hover {
   border-color: #3b82f6;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.sample-tab-button.active {
+.equipment-icon-tab.active {
   background: #3b82f6;
   border-color: #3b82f6;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.tab-icon {
+.equipment-icon-tab-icon {
   font-size: 20px;
   margin-bottom: 6px;
 }
 
-.tab-text {
+.equipment-icon-tab-label {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -215,7 +228,7 @@
   line-height: 1.2;
 }
 
-.tab-subtitle {
+.equipment-icon-tab-subtitle {
   font-size: 9px;
   opacity: 0.8;
   margin-top: 2px;
@@ -223,7 +236,7 @@
 }
 
 /* Warranty Information Section */
-.detail-section {
+.equipment-warranty-section {
   margin-top: 32px;
   padding: 24px;
   background: #f8f9fa;
@@ -231,7 +244,7 @@
   border: 1px solid #e5e7eb;
 }
 
-.section-title {
+.equipment-warranty-header {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -241,26 +254,43 @@
   color: #dc2626;
 }
 
-/* Form styling */
-.vertical-form-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.equipment-warranty-icon {
+  font-size: 16px;
 }
 
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* Basic Information Section */
+.equipment-basic-info-section {
+  margin-top: 32px;
 }
 
-.form-field label {
+.equipment-basic-info-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.equipment-basic-info-icon {
+  font-size: 16px;
+}
+
+/* Form Groups */
+.equipment-form-group {
+  margin-bottom: 20px;
+}
+
+.equipment-form-label {
+  display: block;
   font-weight: 500;
   color: #374151;
   font-size: 14px;
+  margin-bottom: 6px;
 }
 
-.vertical-input {
+.equipment-form-input {
   width: 100%;
   height: 44px;
   padding: 12px 16px;
@@ -274,36 +304,41 @@
   box-sizing: border-box;
 }
 
-.vertical-input:focus {
+.equipment-form-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.vertical-input::placeholder {
+.equipment-form-input::placeholder {
   color: #9ca3af;
 }
 
 /* Green border for warranty end date input */
-.detail-section .vertical-input[type="date"]:last-of-type {
+.equipment-warranty-section .equipment-form-input[type="date"]:last-of-type {
   border-color: #10b981;
 }
 
-.detail-section .vertical-input[type="date"]:last-of-type:focus {
+.equipment-warranty-section .equipment-form-input[type="date"]:last-of-type:focus {
   border-color: #059669;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 /* Navigation Buttons */
-.sample-form-navigation {
+.equipment-navigation-buttons {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 32px;
-  padding-top: 24px;
+  padding: 24px 32px;
   border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.nav-button {
+.equipment-nav-button {
   padding: 12px 24px;
   border: 1px solid #3b82f6;
   background: #ffffff;
@@ -318,17 +353,17 @@
   gap: 8px;
 }
 
-.nav-button:hover {
+.equipment-nav-button:hover {
   background: #3b82f6;
   color: #ffffff;
 }
 
-.nav-button:disabled {
+.equipment-nav-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.page-indicator {
+.equipment-page-indicator {
   font-size: 14px;
   color: #6b7280;
   font-weight: 500;
@@ -408,58 +443,45 @@
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
-/* Form actions */
-.form-actions {
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
-  .modal-content {
+  .equipment-modal-content {
     width: 95vw;
     margin: 0 10px;
   }
   
-  .modal-body {
+  .equipment-modal-body {
     padding: 24px;
   }
   
-  .sample-tab-buttons {
+  .equipment-icon-tabs {
     grid-template-columns: repeat(3, 1fr);
   }
   
-  .tab-button {
+  .equipment-tab-button {
     padding: 10px 16px;
     font-size: 13px;
   }
   
-  .modal-header {
+  .equipment-modal-header {
     padding: 16px 24px;
   }
   
-  .modal-header h2 {
+  .equipment-modal-title {
     font-size: 18px;
   }
 }
 
 @media (max-width: 480px) {
-  .sample-tab-buttons {
+  .equipment-icon-tabs {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .modal-body {
+  .equipment-modal-body {
     padding: 16px;
   }
   
-  .modal-header {
+  .equipment-modal-header {
     padding: 12px 16px;
   }
 }
