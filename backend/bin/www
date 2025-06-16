@@ -25,8 +25,7 @@ const io = new Server(server, {
       'http://localhost:3000', // React dev server fallback
       'http://127.0.0.1:5173',
       'http://127.0.0.1:3000',
-      'https://ecss-it-inventory-frontend.azurewebsites.net', // Your Azure frontend
-      /^https:\/\/.*\.azurestaticapps\.net$/ // Any Azure Static Web Apps domain
+      'https://jolly-sky-0e8d8b700.2.azurestaticapps.net/', // Your Azure frontend
     ],
     credentials: true,
     methods: ['GET', 'POST']
