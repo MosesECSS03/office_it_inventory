@@ -1958,3 +1958,74 @@ body {
   }
 }
 
+/* Modal Open State - Prevent scrolling and interactions */
+.app-container.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+}
+
+.app-container.modal-open .app-main {
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.app-container.modal-open .app-header {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.app-container.modal-open .footer-component {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Prevent scrolling on body when modal is open */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  touch-action: none; /* Prevent touch scrolling on mobile */
+}
+
+/* Prevent any scrolling on the main content area when modal is open */
+.app-container.modal-open * {
+  overflow: hidden !important;
+  scroll-behavior: auto !important;
+}
+
+/* Ensure modals themselves can still function normally */
+.modal-overlay,
+.modal-content {
+  pointer-events: auto !important;
+  user-select: auto !important;
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+}
+
+/* Modal blocking overlay */
+.modal-blocking-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  pointer-events: auto;
+  cursor: not-allowed;
+}
+

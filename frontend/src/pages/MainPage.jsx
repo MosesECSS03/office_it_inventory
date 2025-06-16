@@ -48,11 +48,65 @@ class MainPage extends Component {
     });
   }
 
+  componentDidUpdate(prevProps, prevState) {
+    // Check if modal state changed
+    const wasModalOpen = prevState.showCheckinCheckoutForm || prevState.showInventoryDetailsForm;
+    const isModalOpen = this.state.showCheckinCheckoutForm || this.state.showInventoryDetailsForm;
+    
+    if (wasModalOpen !== isModalOpen) {
+      if (isModalOpen) {
+        // Add class to body to prevent scrolling
+        document.body.classList.add('modal-open');
+        // Prevent wheel events (scrolling with mouse wheel)
+        document.addEventListener('wheel', this.preventScroll, { passive: false });
+        // Prevent keyboard scrolling
+        document.addEventListener('keydown', this.preventKeyboardScroll);
+        // Prevent touch events on mobile
+        document.addEventListener('touchmove', this.preventScroll, { passive: false });
+      } else {
+        // Remove class from body to restore scrolling
+        document.body.classList.remove('modal-open');
+        // Remove event listeners
+        document.removeEventListener('wheel', this.preventScroll);
+        document.removeEventListener('keydown', this.preventKeyboardScroll);
+        document.removeEventListener('touchmove', this.preventScroll);
+      }
+    }
+  }
+
+  // Prevent scroll events
+  preventScroll = (e) => {
+    // Only prevent if the target is not within a modal
+    if (!e.target.closest('.modal-overlay') && !e.target.closest('.modal-content')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  // Prevent keyboard scrolling (arrow keys, page up/down, space, etc.)
+  preventKeyboardScroll = (e) => {
+    const scrollKeys = [32, 33, 34, 35, 36, 37, 38, 39, 40]; // space, page up/down, end, home, arrow keys
+    // Only prevent if the target is not within a modal and not an input/textarea
+    if (!e.target.closest('.modal-overlay') && !e.target.closest('.modal-content') && 
+        !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+      if (scrollKeys.includes(e.keyCode)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }
+
   componentWillUnmount() {
     // Clean up socket connection
     if (this.socket) {
       this.socket.disconnect();
     }
+    
+    // Clean up body class and event listeners
+    document.body.classList.remove('modal-open');
+    document.removeEventListener('wheel', this.preventScroll);
+    document.removeEventListener('keydown', this.preventKeyboardScroll);
+    document.removeEventListener('touchmove', this.preventScroll);
   }
 
   initializeData = async () => {
@@ -149,8 +203,11 @@ class MainPage extends Component {
   render() {
     const { appTitle, timeZone, statisticsData, inventoryData, filteredInventoryData, isLoading, lastUpdated, showCheckinCheckoutForm, showInventoryDetailsForm, editInventoryItem, activeTab } = this.state;
 
+    // Check if any modal is open
+    const isModalOpen = showCheckinCheckoutForm || showInventoryDetailsForm;
+
     return (
-      <div className="app-container">
+      <div className={`app-container ${isModalOpen ? 'modal-open' : ''}`}>
       <header className="app-header">
         <TitleComponent 
             title={appTitle}
@@ -163,6 +220,9 @@ class MainPage extends Component {
       </header>
       
       <div className="app-main">
+        {/* Modal blocking overlay */}
+        {isModalOpen && <div className="modal-blocking-overlay" />}
+        
         {/* Top Section - Search and Filter */}
         <div className="top-section">
           <FilterSearchComponent
