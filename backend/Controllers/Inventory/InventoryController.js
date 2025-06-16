@@ -45,6 +45,12 @@ class InventoryController
         inventoryItem.setNotes(item.Notes);
         inventoryItem.setLastAmendmentOn(formatDateForFrontend(item['Last Admendment On']));
         
+        // Handle User History as array, not date
+        const userHistory = item['User History'];
+        console.log('User History:', userHistory);
+        inventoryItem.setUserHistory(userHistory);
+        
+        // Return the inventoryItem object
         return inventoryItem;
       });
       

@@ -1,6 +1,29 @@
 import React, { Component } from 'react';
 
 class DateTimeComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      currentTime: new Date()
+    };
+  }
+
+  componentDidMount() {
+    // Update the time every second
+    this.timer = setInterval(() => {
+      this.setState({
+        currentTime: new Date()
+      });
+    }, 1000);
+  }
+
+  componentWillUnmount() {
+    // Clean up the timer when component unmounts
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  }
+
   formatDateTime = (date) => {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayOfWeek = dayNames[date.getDay()];
@@ -28,22 +51,22 @@ class DateTimeComponent extends Component {
   }
 
   render() {
-    const { 
-      timeZone = 'local', 
-      lastDataUpdate = null, 
-      currentDateTime = new Date(), 
-      lastUpdated = new Date() 
-    } = this.props;
+    const { lastUpdated } = this.props;
+    const { currentTime } = this.state;
     
     return (
       <div className="datetime-component">
         <div className="datetime-display">
-          <div className="last-updated-label">Last updated on:</div>
-          {this.formatDateTime(currentDateTime)}
+          {lastUpdated && (
+            <div className="last-updated">
+              <strong>Current Time:</strong> {this.formatDateTime(currentTime)}
+            </div>
+          )}
         </div>
       </div>
     );
   }
 }
+
 
 export default DateTimeComponent;

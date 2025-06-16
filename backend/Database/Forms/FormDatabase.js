@@ -34,17 +34,27 @@ class FormDatabase {
       const collection = db.collection(collectionName);
       
       // Build query to find forms for the employee
+      // Make email and mobile number optional for matching
       const query = {
         $and: [
           { 'name': { $regex: new RegExp(employeeInfo.name, 'i') } },
-          { 'email': { $regex: new RegExp(employeeInfo.email, 'i') } },
-          { 'mobileNo': employeeInfo.mobileNo }
+          { 'employeeId': employeeInfo.employeeId }
         ]
       };
       
+      // Only add email to query if it's provided and not empty
+      if (employeeInfo.email && employeeInfo.email.trim()) {
+        query.$and.push({ 'email': { $regex: new RegExp(employeeInfo.email, 'i') } });
+      }
+      
+      // Only add mobile number to query if it's provided and not empty
+      if (employeeInfo.mobileNo && employeeInfo.mobileNo.trim()) {
+        query.$and.push({ 'mobileNo': employeeInfo.mobileNo });
+      }
+      
       // Get all forms for this employee, sorted by date to process chronologically
       const forms = await collection.find(query).toArray();
-      console.log("Forms found for employee123:", forms[0].inventories);
+      console.log("Forms found for employee123:", forms[0]?.inventories);
       return forms;
     } catch (error) {
       console.error('Error getting current inventory by employee:', error);
@@ -55,8 +65,8 @@ class FormDatabase {
   async updateEmployeeInventory(collectionName, formData) {
     try {
       // Validate required fields
-      if (!formData.name || !formData.email) {
-        throw new Error('Employee name and email are required');
+      if (!formData.name || !formData.employeeId || !formData.email) {
+        throw new Error('Employee name, employee ID, and email are required');
       }
 
       // Ensure connection is established
@@ -231,6 +241,7 @@ class FormDatabase {
         const updateData = {
           $set: {
             name: formData.name,
+            employeeId: formData.employeeId,
             department: formData.department || existingDocument.department,
             email: formData.email,
             mobileNo: formData.mobileNo,
@@ -281,6 +292,7 @@ class FormDatabase {
         
         const query = {
           name: formData.name,
+          employeeId: formData.employeeId,
           email: formData.email,
           mobileNo: formData.mobileNo,
           formType: { $ne: 'return' } // Exclude return records from search
@@ -305,6 +317,7 @@ class FormDatabase {
         // This is a new checkout operation, create a new form entry
         const newFormData = {
           name: formData.name,
+          employeeId: formData.employeeId,
           department: formData.department || '',
           email: formData.email,
           mobileNo: formData.mobileNo,
@@ -353,6 +366,116 @@ class FormDatabase {
       }
     } catch (error) {
       console.error('Error in updateEmployeeInventory:', error);
+      throw error;
+    }
+  }
+
+  async findByEmployee(collectionName, employeeInfo) {
+    try {
+      // Ensure connection is established
+      await dbConnection.connect();
+      const db = dbConnection.getDatabase();
+      const collection = db.collection(collectionName);
+      
+      // Build query to find forms for the employee
+      // Make email and mobile number optional for matching
+      const query = {
+        $and: [
+          { 'name': { $regex: new RegExp(employeeInfo.name, 'i') } },
+          { 'employeeId': employeeInfo.employeeId }
+        ]
+      };
+      
+      // Only add email to query if it's provided and not empty
+      if (employeeInfo.email && employeeInfo.email.trim()) {
+        query.$and.push({ 'email': { $regex: new RegExp(employeeInfo.email, 'i') } });
+      }
+      
+      // Only add mobile number to query if it's provided and not empty
+      if (employeeInfo.mobileNo && employeeInfo.mobileNo.trim()) {
+        query.$and.push({ 'mobileNo': employeeInfo.mobileNo });
+      }
+      
+      // Get all forms for this employee, sorted by date (newest first)
+      const forms = await collection.find(query).sort({ date: -1, time: -1 }).toArray();
+      console.log("All forms found for employee:", forms.length);
+      return forms;
+    } catch (error) {
+      console.error('Error finding forms by employee:', error);
+      throw error;
+    }
+  }
+
+  async getAllEmployees(collectionName) {
+    try {
+      // Ensure connection is established
+      await dbConnection.connect();
+      const db = dbConnection.getDatabase();
+      const collection = db.collection(collectionName);
+      
+      // Get unique employees based on employeeId
+      const employees = await collection.aggregate([
+        {
+          $group: {
+            _id: "$employeeId",
+            name: { $first: "$name" },
+            employeeId: { $first: "$employeeId" },
+            email: { $first: "$email" },
+            mobileNo: { $first: "$mobileNo" },
+            department: { $first: "$department" },
+            latestDate: { $max: "$date" }
+          }
+        },
+        {
+          $sort: { name: 1 } // Sort by name alphabetically
+        },
+        {
+          $project: {
+            _id: 0,
+            employeeId: 1,
+            name: 1,
+            email: 1,
+            mobileNo: 1,
+            department: 1
+          }
+        }
+      ]).toArray();
+      
+      console.log('Unique employees found:', employees);
+      return employees;
+    } catch (error) {
+      console.error('Error getting all employees:', error);
+      throw error;
+    }
+  }
+
+  async getEmployeeByCode(collectionName, employeeCode) {
+    try {
+      // Ensure connection is established
+      await dbConnection.connect();
+      const db = dbConnection.getDatabase();
+      const collection = db.collection(collectionName);
+      
+      // Find the most recent record for this employee code
+      const employee = await collection.findOne(
+        { employeeId: employeeCode },
+        { sort: { date: -1, time: -1 } } // Get the most recent record
+      );
+      
+      if (!employee) {
+        return null;
+      }
+      
+      // Return just the employee details (not inventories)
+      return {
+        employeeId: employee.employeeId,
+        name: employee.name,
+        email: employee.email,
+        mobileNo: employee.mobileNo,
+        department: employee.department
+      };
+    } catch (error) {
+      console.error('Error getting employee by code:', error);
       throw error;
     }
   }

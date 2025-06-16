@@ -3,6 +3,7 @@ class FormItem {
   {
     this._id = '';
     this._name = '';
+    this._employeeCode = '';
     this._department = '';
     this._email = '';
     this._mobileNo = '';
@@ -19,6 +20,10 @@ class FormItem {
   // Getter methods
   getName() {
     return this._name;
+  }
+
+  getEmployeeCode() {
+    return this._employeeCode;
   }
 
   getDepartment() {
@@ -52,6 +57,10 @@ class FormItem {
 
   setName(name) {
     this._name = name;
+  }
+
+  setEmployeeCode(employeeCode) {
+    this._employeeCode = employeeCode;
   }
 
   setDepartment(department) {

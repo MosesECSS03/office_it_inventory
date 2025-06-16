@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import axios from 'axios'
+import './CheckinCheckoutFormComponent.css'
 
 const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
   ? "http://localhost:3001" 
@@ -17,6 +18,7 @@ class CheckinCheckoutFormComponent extends Component {
       // Employee Details (Page 1)
       employeeDetails: {
         name: '',
+        employeeId: '',
         department: '',
         email: '',
         mobileNo: '',
@@ -35,7 +37,12 @@ class CheckinCheckoutFormComponent extends Component {
       
       // Search dropdown state
       searchDropdowns: {}, // Object to track dropdown state for each row
-      searchSuggestions: {} // Object to store suggestions for each row
+      searchSuggestions: {}, // Object to store suggestions for each row
+      
+      // Employee dropdown state for existing tab
+      employees: [], // List of all employees
+      showEmployeeDropdown: false, // Show/hide employee dropdown
+      employeeSearchTerm: '' // Search term for employee dropdown
     };
     
     // Timeout for debouncing inventory fetch
@@ -45,6 +52,9 @@ class CheckinCheckoutFormComponent extends Component {
   componentDidMount() {
     // Add click listener to hide dropdowns when clicking outside
     document.addEventListener('click', this.handleDocumentClick);
+    
+    // Fetch all employees for dropdown immediately on mount
+    this.fetchAllEmployees();
   }
 
   componentWillUnmount() {
@@ -111,6 +121,7 @@ class CheckinCheckoutFormComponent extends Component {
       currentPage: 1,
       employeeDetails: {
         name: '',
+        employeeId: '',
         department: '',
         email: '',
         mobileNo: '',
@@ -142,6 +153,34 @@ class CheckinCheckoutFormComponent extends Component {
     });
   }
 
+  // Fetch all employees for dropdown
+  fetchAllEmployees = async () => {
+    try {
+      console.log('Fetching employees from:', `${baseURL}/forms`);
+      const response = await axios.post(`${baseURL}/forms`, {
+        purpose: 'getAllEmployees'
+      });
+      
+      console.log('Full employee response:', response.data);
+      
+      if (response.data && response.data.status === 'success') {
+        const employeeData = response.data.data || [];
+        this.setState({ 
+          employees: employeeData
+        });
+        console.log('Employees loaded for dropdown:', employeeData);
+        console.log('Number of employees loaded:', employeeData.length);
+      } else {
+        console.error('Failed to fetch employees - bad response:', response.data);
+        this.setState({ employees: [] });
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      console.error('Error details:', error.response?.data);
+      this.setState({ employees: [] });
+    }
+  }
+
   handleTabChange = (tab) => {
     // Clear any pending timeouts
     if (this.fetchInventoryTimeout) {
@@ -154,8 +193,15 @@ class CheckinCheckoutFormComponent extends Component {
       currentPage: 1,
       tableRows: this.createDefaultRows(4),
       errors: {},
-      successMessage: ''
+      successMessage: '',
+      showEmployeeDropdown: false,
+      employeeSearchTerm: ''
     });
+
+    // Fetch employees when switching to existing tab
+    if (tab === 'existing') {
+      this.fetchAllEmployees();
+    }
   }
 
   handleEmployeeDetailChange = (field, value) => {
@@ -164,21 +210,16 @@ class CheckinCheckoutFormComponent extends Component {
         ...prevState.employeeDetails,
         [field]: value
       }
-    }), () => {
-      // For existing tab, auto-fetch inventory when all required fields are filled
-      if (this.state.activeTab === 'existing') {
-        this.checkAndFetchEmployeeInventory();
-      }
-    });
+    }));
+    // Note: Auto-fetch for existing tab is now handled by employee selection, not manual field changes
   }
 
   checkAndFetchEmployeeInventory = () => {
     const { employeeDetails } = this.state;
     
-    // Check if all required fields for existing tab are filled
-    if (employeeDetails.name.trim() && 
-        employeeDetails.email.trim() && 
-        employeeDetails.mobileNo.trim()) {
+    // Check if only required fields (name and employeeId) are filled
+    if (employeeDetails.name && employeeDetails.name.trim() && 
+        employeeDetails.employeeId && employeeDetails.employeeId.trim()) {
       
       // Debounce the API call to avoid too many requests
       clearTimeout(this.fetchInventoryTimeout);
@@ -194,8 +235,9 @@ class CheckinCheckoutFormComponent extends Component {
     try {
       const employeeInfo = {
         name: employeeDetails.name.trim(),
-        email: employeeDetails.email.trim(),
-        mobileNo: employeeDetails.mobileNo.trim()
+        employeeId: employeeDetails.employeeId.trim(),
+        email: employeeDetails.email ? employeeDetails.email.trim() : '',
+        mobileNo: employeeDetails.mobileNo ? employeeDetails.mobileNo.trim() : ''
       };
 
       const response = await axios.post(`${baseURL}/forms`, {employeeInfo, purpose: "existing"});
@@ -225,14 +267,28 @@ class CheckinCheckoutFormComponent extends Component {
             
             currentInventory.forEach((item, index) => {
               console.log(`Processing inventory item ${index + 1}:`, item);
+              console.log(`Item description structure:`, typeof item.itemDescription, item.itemDescription);
+              
+              // Handle different itemDescription formats
+              let itemDesc = { brand: '', model: '', serialNumber: '' };
+              if (item.itemDescription) {
+                if (typeof item.itemDescription === 'object' && item.itemDescription !== null) {
+                  // It's already an object
+                  itemDesc = {
+                    brand: item.itemDescription.brand || '',
+                    model: item.itemDescription.model || '',
+                    serialNumber: item.itemDescription.serialNumber || ''
+                  };
+                } else if (typeof item.itemDescription === 'string') {
+                  // It's a string, might need to parse or leave empty
+                  console.log('itemDescription is a string:', item.itemDescription);
+                }
+              }
+              
               populatedRows.push({
                 id: index + 1,
                 ecssInventoryNo: item.ecssInventoryNo || '',
-                itemDescription: {
-                  brand: item.itemDescription?.brand || '',
-                  model: item.itemDescription?.model || '',
-                  serialNumber: item.itemDescription?.serialNumber || ''
-                },
+                itemDescription: itemDesc,
                 condition: item.condition || '',
                 notes: item.notes || '',
                 location: '', // Add location field for return functionality
@@ -339,8 +395,9 @@ class CheckinCheckoutFormComponent extends Component {
       // Prepare employee info for the backend
       const employeeInfo = {
         name: employeeDetails.name,
-        email: employeeDetails.email,
-        mobileNo: employeeDetails.mobileNo
+        employeeId: employeeDetails.employeeId,
+        email: employeeDetails.email || '',
+        mobileNo: employeeDetails.mobileNo || ''
       };
       
       console.log('Fetching existing inventory for employee:', employeeInfo);
@@ -778,10 +835,12 @@ class CheckinCheckoutFormComponent extends Component {
     
     if (currentPage === 1) {
       if (!employeeDetails.name.trim()) errors.employeeName = 'Employee name is required';
+      if (!employeeDetails.employeeId.trim()) errors.employeeId = 'Employee ID is required';
       // Only require department for "New" tab
       if (activeTab === 'new' && !employeeDetails.department.trim()) errors.department = 'Department is required';
-      if (!employeeDetails.email.trim()) errors.email = 'Email is required';
-      if (!employeeDetails.mobileNo.trim()) errors.mobileNo = 'Mobile number is required';
+      // Only require email and mobile number for "New" tab (optional for existing tab)
+      if (activeTab === 'new' && !employeeDetails.email.trim()) errors.email = 'Email is required';
+      if (activeTab === 'new' && !employeeDetails.mobileNo.trim()) errors.mobileNo = 'Mobile number is required';
     }
     
     this.setState({ errors });
@@ -868,10 +927,12 @@ class CheckinCheckoutFormComponent extends Component {
       
       // Determine the purpose based on the active tab
       const purpose = this.state.activeTab === 'new' ? 'new' : 'update';
+
       
       // Submit data in the required format
       const submissionData = {
         name: employeeDetails.name,
+        employeeId: employeeDetails.employeeId, // Required employee ID
         department: employeeDetails.department || '', // Handle empty department for existing tab
         email: employeeDetails.email,
         mobileNo: employeeDetails.mobileNo,
@@ -1044,64 +1105,175 @@ class CheckinCheckoutFormComponent extends Component {
         <div className="employee-details-section">
           <h4>Employee Details</h4>
           
-          <div className="form-row">
-            <div className="form-group">
-              <label>Name of Employee: <span className="required">*</span></label>
-              <input
-                type="text"
-                value={employeeDetails.name}
-                onChange={(e) => this.handleEmployeeDetailChange('name', e.target.value)}
-                className={`form-control underline-input ${errors.employeeName ? 'error' : ''}`}
-                placeholder="Enter full name"
-              />
-              {errors.employeeName && <span className="error-text">{errors.employeeName}</span>}
-            </div>
-          </div>
-
-          {/* Only show department field for "New" tab */}
-          {activeTab === 'new' && (
-            <div className="form-row">
-              <div className="form-group">
-                <label>Department: <span className="required">*</span></label>
-                <input
-                  type="text"
-                  value={employeeDetails.department}
-                  onChange={(e) => this.handleEmployeeDetailChange('department', e.target.value)}
-                  className={`form-control underline-input ${errors.department ? 'error' : ''}`}
-                  placeholder="Enter department"
-                />
-                {errors.department && <span className="error-text">{errors.department}</span>}
+          {/* Conditional field ordering based on active tab */}
+          {activeTab === 'existing' ? (
+            // For existing tab: Employee ID first (searchable dropdown), then auto-populated fields
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Employee ID: <span className="required">*</span></label>
+                  <div className="search-dropdown-container">
+                    <input
+                      type="text"
+                      value={this.state.employeeSearchTerm || ''}
+                      onChange={(e) => this.handleEmployeeCodeChange(e.target.value)}
+                      onFocus={() => {
+                        console.log('Employee input focused, setting dropdown visible');
+                        this.setState({ showEmployeeDropdown: true });
+                      }}
+                      onBlur={() => {
+                        console.log('Employee input blurred, hiding dropdown in 200ms');
+                        setTimeout(() => this.setState({ showEmployeeDropdown: false }), 200);
+                      }}
+                      className={`form-control underline-input ${errors.employeeId ? 'error' : ''}`}
+                      placeholder="Type employee ID or name to search..."
+                    />
+                    {this.state.showEmployeeDropdown && (
+                      <div className="search-dropdown employee-dropdown">
+                        {this.getFilteredEmployees().map((employee, index) => (
+                          <div
+                            key={employee.employeeId}
+                            className="search-dropdown-item employee-dropdown-item"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => this.handleEmployeeSelect(employee)}
+                          >
+                            <div className="employee-info">
+                              <div className="employee-code">{employee.employeeId}</div>
+                              <div className="employee-name">{employee.name}</div>
+                            </div>
+                          </div>
+                        ))}
+                        {this.getFilteredEmployees().length === 0 && (
+                          <div className="search-dropdown-item no-results">
+                            No employees found
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {errors.employeeId && <span className="error-text">{errors.employeeId}</span>}
+                </div>
               </div>
-            </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Name of Employee: <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    value={employeeDetails.name || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('name', e.target.value)}
+                    className={`form-control underline-input ${errors.employeeName ? 'error' : ''} readonly`}
+                    placeholder="Employee name"
+                    readOnly={true}
+                  />
+                  {errors.employeeName && <span className="error-text">{errors.employeeName}</span>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Email: <span className="required">*</span></label>
+                  <input
+                    type="email"
+                    value={employeeDetails.email || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('email', e.target.value)}
+                    className={`form-control underline-input ${errors.email ? 'error' : ''} readonly`}
+                    placeholder="Employee email"
+                    readOnly={true}
+                  />
+                  {errors.email && <span className="error-text">{errors.email}</span>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Mobile No: <span className="required">*</span></label>
+                  <input
+                    type="tel"
+                    value={employeeDetails.mobileNo || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('mobileNo', e.target.value)}
+                    className={`form-control underline-input ${errors.mobileNo ? 'error' : ''} readonly`}
+                    placeholder="Employee mobile number"
+                    readOnly={true}
+                  />
+                  {errors.mobileNo && <span className="error-text">{errors.mobileNo}</span>}
+                </div>
+              </div>
+            </>
+          ) : (
+            // For new tab: Traditional order - Name first, then Employee ID, then Department
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Name of Employee: <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    value={employeeDetails.name || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('name', e.target.value)}
+                    className={`form-control underline-input ${errors.employeeName ? 'error' : ''}`}
+                    placeholder="Enter full name"
+                  />
+                  {errors.employeeName && <span className="error-text">{errors.employeeName}</span>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Employee ID: <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    value={employeeDetails.employeeId || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('employeeId', e.target.value)}
+                    className={`form-control underline-input ${errors.employeeId ? 'error' : ''}`}
+                    placeholder="Enter employee ID"
+                  />
+                  {errors.employeeId && <span className="error-text">{errors.employeeId}</span>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Department: <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    value={employeeDetails.department || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('department', e.target.value)}
+                    className={`form-control underline-input ${errors.department ? 'error' : ''}`}
+                    placeholder="Enter department"
+                  />
+                  {errors.department && <span className="error-text">{errors.department}</span>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Email: <span className="required">*</span></label>
+                  <input
+                    type="email"
+                    value={employeeDetails.email || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('email', e.target.value)}
+                    className={`form-control underline-input ${errors.email ? 'error' : ''}`}
+                    placeholder="Enter email address"
+                  />
+                  {errors.email && <span className="error-text">{errors.email}</span>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Mobile No: <span className="required">*</span></label>
+                  <input
+                    type="tel"
+                    value={employeeDetails.mobileNo || ''}
+                    onChange={(e) => this.handleEmployeeDetailChange('mobileNo', e.target.value)}
+                    className={`form-control underline-input ${errors.mobileNo ? 'error' : ''}`}
+                    placeholder="Enter mobile number"
+                  />
+                  {errors.mobileNo && <span className="error-text">{errors.mobileNo}</span>}
+                </div>
+              </div>
+            </>
           )}
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Email: <span className="required">*</span></label>
-              <input
-                type="email"
-                value={employeeDetails.email}
-                onChange={(e) => this.handleEmployeeDetailChange('email', e.target.value)}
-                className={`form-control underline-input ${errors.email ? 'error' : ''}`}
-                placeholder="Enter email address"
-              />
-              {errors.email && <span className="error-text">{errors.email}</span>}
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Mobile No: <span className="required">*</span></label>
-              <input
-                type="tel"
-                value={employeeDetails.mobileNo}
-                onChange={(e) => this.handleEmployeeDetailChange('mobileNo', e.target.value)}
-                className={`form-control underline-input ${errors.mobileNo ? 'error' : ''}`}
-                placeholder="Enter mobile number"
-              />
-              {errors.mobileNo && <span className="error-text">{errors.mobileNo}</span>}
-            </div>
-          </div>
         </div>
 
         {/* Only show formal letter section for "New" tab */}
@@ -1124,7 +1296,7 @@ class CheckinCheckoutFormComponent extends Component {
                   <label>Signature:</label>
                   <input
                     type="text"
-                    value={employeeDetails.signature}
+                    value={employeeDetails.signature || ''}
                     onChange={(e) => this.handleEmployeeDetailChange('signature', e.target.value)}
                     className="form-control underline-input signature-input"
                     placeholder="Type your name as digital signature"
@@ -1207,7 +1379,7 @@ class CheckinCheckoutFormComponent extends Component {
             <div className="input-with-clear">
               <input
                 type="text"
-                value={row.ecssInventoryNo}
+                value={row.ecssInventoryNo || ''}
                 onChange={(e) => this.handleInventoryNoChange(index, e.target.value)}
                 onFocus={() => this.handleInventoryNoFocus(index)} // Show dropdown on focus
                 onBlur={() => setTimeout(() => this.hideSearchDropdown(index), 200)} // Increased delay to allow click on suggestion
@@ -1256,7 +1428,7 @@ class CheckinCheckoutFormComponent extends Component {
         <td>
           <input
             type="text"
-            value={row.itemDescription.brand}
+            value={row.itemDescription.brand || ''}
             onChange={(e) => this.handleItemDescriptionChange(index, 'brand', e.target.value)}
             className="table-input"
             placeholder="Brand"
@@ -1266,7 +1438,7 @@ class CheckinCheckoutFormComponent extends Component {
         <td>
           <input
             type="text"
-            value={row.itemDescription.model}
+            value={row.itemDescription.model || ''}
             onChange={(e) => this.handleItemDescriptionChange(index, 'model', e.target.value)}
             className="table-input"
             placeholder="Model"
@@ -1276,7 +1448,7 @@ class CheckinCheckoutFormComponent extends Component {
         <td>
           <input
             type="text"
-            value={row.itemDescription.serialNumber}
+            value={row.itemDescription.serialNumber || ''}
             onChange={(e) => this.handleItemDescriptionChange(index, 'serialNumber', e.target.value)}
             className="table-input"
             placeholder="Serial #"
@@ -1286,7 +1458,7 @@ class CheckinCheckoutFormComponent extends Component {
         <td>
           <input
             type="text"
-            value={row.condition}
+            value={row.condition || ''}
             onChange={(e) => this.handleCellChange(index, 'condition', e.target.value)}
             className="table-input"
             placeholder="Condition"
@@ -1296,7 +1468,7 @@ class CheckinCheckoutFormComponent extends Component {
         <td>
           <input
             type="text"
-            value={row.notes}
+            value={row.notes || ''}
             onChange={(e) => this.handleCellChange(index, 'notes', e.target.value)}
             className="table-input"
             placeholder="Notes"
@@ -1493,6 +1665,84 @@ class CheckinCheckoutFormComponent extends Component {
         label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
         item: item
       })); // Limit to 10 suggestions
+  }
+
+  // Handle employee code input change
+  handleEmployeeCodeChange = (value) => {
+    console.log('handleEmployeeCodeChange called with value:', value);
+    console.log('Current employees array:', this.state.employees);
+    
+    this.setState({ 
+      employeeSearchTerm: value,
+      showEmployeeDropdown: value.length > 0,
+      employeeDetails: {
+        ...this.state.employeeDetails,
+        employeeId: value
+      }
+    });
+
+    // If user clears the field, clear all other fields
+    if (!value.trim()) {
+      this.setState({
+        employeeDetails: {
+          ...this.state.employeeDetails,
+          name: '',
+          employeeId: '',
+          department: '',
+          email: '',
+          mobileNo: ''
+        },
+        showEmployeeDropdown: false
+      });
+    }
+  }
+
+  // Handle employee selection from dropdown
+  handleEmployeeSelect = async (employee) => {
+    console.log('Employee selected:', employee);
+    
+    this.setState({
+      employeeDetails: {
+        ...this.state.employeeDetails,
+        employeeId: employee.employeeId,
+        name: employee.name,
+        email: employee.email,
+        mobileNo: employee.mobileNo,
+        department: employee.department || ''
+      },
+      showEmployeeDropdown: false,
+      employeeSearchTerm: employee.employeeId
+    });
+
+    // Auto-fetch inventory for the selected employee
+    setTimeout(() => {
+      this.checkAndFetchEmployeeInventory();
+    }, 100);
+  }
+
+  // Get filtered employees for dropdown
+  getFilteredEmployees = () => {
+    const { employees, employeeSearchTerm } = this.state;
+    
+    console.log('getFilteredEmployees called with:', {
+      employeesCount: employees.length,
+      searchTerm: employeeSearchTerm,
+      employees: employees
+    });
+    
+    if (!employeeSearchTerm.trim()) {
+      console.log('No search term, returning first 10 employees:', employees.slice(0, 10));
+      return employees.slice(0, 10); // Show first 10 employees when no search term
+    }
+    
+    const searchTerm = employeeSearchTerm.toLowerCase();
+    const filtered = employees.filter(employee => 
+      employee.employeeId.toLowerCase().includes(searchTerm) ||
+      employee.name.toLowerCase().includes(searchTerm)
+    ).slice(0, 10); // Limit to 10 results
+    
+    console.log('Filtered employees:', filtered);
+    return filtered;
   }
 }
 

@@ -7,6 +7,17 @@ router.post('/', async (req, res) =>
 {
   const io = req.app.get('io'); // Get the Socket.IO instance
   console.log('Received POST request on /forms with body:', req.body);
+  
+  // Log employee details for debugging
+  if (req.body.submissionData) {
+    console.log('Employee details received:', {
+      name: req.body.submissionData.name,
+      employeeId: req.body.submissionData.employeeId,
+      email: req.body.submissionData.email,
+      mobileNo: req.body.submissionData.mobileNo
+    });
+  }
+  
   try{
     if(req.body.purpose === 'new') {
       var inventories = req.body.submissionData.inventories;
@@ -70,6 +81,17 @@ router.post('/', async (req, res) =>
       const controller = new FormsController();
       const result = await controller.getEmployeeCurrentInventory(req.body.employeeInfo);
       //console.log('Retrieved current inventory for employee inventory:', result.data);
+      res.json(result);
+    }
+    else if(req.body.purpose === 'getAllEmployees') {
+      const controller = new FormsController();
+      const result = await controller.getAllEmployees();
+      res.json(result);
+    }
+    else if(req.body.purpose === 'getEmployeeByCode') {
+      const employeeCode = req.body.employeeCode;
+      const controller = new FormsController();
+      const result = await controller.getEmployeeByCode(employeeCode);
       res.json(result);
     }
   }

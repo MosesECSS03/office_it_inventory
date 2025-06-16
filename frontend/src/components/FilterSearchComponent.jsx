@@ -36,6 +36,7 @@ class FilterSearchComponent extends Component {
   getUniqueValues = (data, field) => {
     if (!data || data.length === 0) return [];
     const values = data
+      .filter(item => item != null) // Filter out null/undefined items first
       .map(item => item[field])
       .filter(value => value && value.toString().trim() !== '')
       .map(value => value.toString().trim());
@@ -144,7 +145,9 @@ class FilterSearchComponent extends Component {
     } catch (error) {
       return 'Unknown';
     }
-  };  // Apply all filters and search
+  };
+
+  // Apply all filters and search
   applyFilters = () => {
     const { data = [], onFilterChange } = this.props;
     const { searchTerm, warrantyStatus, selectedStatus } = this.state;

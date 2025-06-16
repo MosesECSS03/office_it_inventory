@@ -27,11 +27,11 @@ class MainPage extends Component {
       filteredInventoryData: [], // Add filtered data state
       isLoading: true,
       lastDataUpdate: null,
-      currentDateTime: new Date(),
       lastUpdated: new Date(),
       showCheckinCheckoutForm: false,
       showInventoryDetailsForm: false,
-      editInventoryItem: null // Add state for item being edited
+      editInventoryItem: null, // Add state for item being edited
+      activeTab: 'general' // Add active tab state
     };
   }
 
@@ -49,11 +49,6 @@ class MainPage extends Component {
   }
 
   componentWillUnmount() {
-    // Clean up the timers when component unmounts
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-    
     // Clean up socket connection
     if (this.socket) {
       this.socket.disconnect();
@@ -144,20 +139,25 @@ class MainPage extends Component {
     this.initializeData(); // Refresh the data when inventory is updated
   }
 
+  // Handle tab change
+  handleTabChange = (tabName) => {
+    this.setState({ activeTab: tabName });
+    console.log(`Active tab changed to: ${tabName}`);
+    // Add any additional logic for tab switching here
+  }
+
   render() {
-    const { appTitle, timeZone, statisticsData, inventoryData, filteredInventoryData, isLoading, currentDateTime, lastUpdated, showCheckinCheckoutForm, showInventoryDetailsForm, editInventoryItem } = this.state;
+    const { appTitle, timeZone, statisticsData, inventoryData, filteredInventoryData, isLoading, lastUpdated, showCheckinCheckoutForm, showInventoryDetailsForm, editInventoryItem, activeTab } = this.state;
 
     return (
       <div className="app-container">
       <header className="app-header">
-        <div className="header-spacer"></div>
         <TitleComponent 
-          title={appTitle}
-          isLoading={isLoading}
-        />
+            title={appTitle}
+            isLoading={isLoading}
+          />
+        <div className="header-spacer"></div>
         <DateTimeComponent 
-          timeZone={timeZone}
-          currentDateTime={currentDateTime}
           lastUpdated={lastUpdated}
         />
       </header>
@@ -183,6 +183,8 @@ class MainPage extends Component {
               data={filteredInventoryData} // Use filtered data for table
               isLoading={isLoading}
               onEditItem={this.handleEditInventoryItem} // Pass edit handler
+              activeTab={activeTab}
+              onTabChange={this.handleTabChange}
             />
           </div>
         </div>

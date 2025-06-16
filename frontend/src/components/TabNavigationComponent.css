@@ -1,0 +1,253 @@
+/* Tab Navigation Layout */
+.tab-navigation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 2rem;
+}
+
+.tab-buttons-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+/* Export Button Styles - Matching the existing tab button theme */
+.export-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(46, 204, 113, 0.2);
+  border: 2px solid rgba(46, 204, 113, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  min-width: 100px;
+  color: #ffffff;
+}
+
+.export-button:hover {
+  background: rgba(46, 204, 113, 0.3);
+  border-color: rgba(46, 204, 113, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(46, 204, 113, 0.2);
+}
+
+.export-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.15);
+}
+
+.export-button-logo {
+  width: 32px;
+  height: 32px;
+  font-size: 24px;
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.export-button:hover .export-button-logo {
+  transform: scale(1.1);
+}
+
+.export-button-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+/* Export Modal Styles */
+.export-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.export-modal {
+  background-color: white;
+  border-radius: 12px;
+  padding: 0;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+.export-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.export-modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.export-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.export-modal-close:hover {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.export-modal-content {
+  padding: 24px;
+}
+
+.export-modal-content p {
+  margin: 0 0 20px 0;
+  color: #666;
+  font-size: 16px;
+}
+
+.export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.export-option-button {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.export-option-button:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.export-option-button:active {
+  transform: translateY(0);
+}
+
+.export-option-icon {
+  font-size: 24px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.export-option-button div {
+  flex: 1;
+}
+
+.export-option-button strong {
+  display: block;
+  color: #333;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.export-option-button p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.export-all:hover {
+  border-color: #28a745;
+}
+
+.export-all:hover .export-option-button {
+  background-color: #f8fff9;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+}
+
+.export-current:hover {
+  border-color: #17a2b8;
+}
+
+.export-current:hover .export-option-button {
+  background-color: #f8fdff;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.15);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .export-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .export-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .export-modal-content {
+    padding: 20px;
+  }
+  
+  .export-option-button {
+    padding: 14px;
+  }
+  
+  .export-option-icon {
+    font-size: 20px;
+    margin-right: 12px;
+  }
+}

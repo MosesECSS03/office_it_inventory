@@ -9,6 +9,7 @@ router.post('/', async (req, res) =>
     if(req.body.purpose === 'retrieve') {
       var controller = new InventoryController();
       const inventoryData = await controller.getAllInventory();
+      console.log('Retrieved inventory data:', inventoryData);
       res.json(inventoryData);
     }
     else if(req.body.purpose === 'create') {

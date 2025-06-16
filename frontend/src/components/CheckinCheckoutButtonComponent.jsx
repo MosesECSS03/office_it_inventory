@@ -1,14 +1,27 @@
 import React, { Component } from 'react'
 
 class CheckinCheckoutButtonComponent extends Component {
+  handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!this.props.disabled && !this.props.isLoading && this.props.onClick) {
+      this.props.onClick();
+    }
+  };
+
   render() {
-    const { onClick, disabled, isLoading } = this.props;
+    const { disabled, isLoading } = this.props;
 
     return (
       <button 
         className="action-button checkin-checkout-btn"
-        onClick={onClick}
+        onClick={this.handleClick}
         disabled={disabled || isLoading}
+        style={{
+          pointerEvents: (disabled || isLoading) ? 'none' : 'auto',
+          userSelect: 'none'
+        }}
       >
         <span className="button-icon">🔄</span>
         IT Inventory Checkin/Checkout Form

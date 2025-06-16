@@ -88,10 +88,11 @@ class FormsController
     return new Promise((resolve, reject) => {
       try {
         // Validate employee info
-        if (!employeeInfo || !employeeInfo.name || !employeeInfo.email || !employeeInfo.mobileNo) {
+        if (!employeeInfo || !employeeInfo.name || !employeeInfo.employeeId /*|| !employeeInfo.email || !employeeInfo.mobileNo*/) {
           reject({
             status: 'error',
-            message: 'Employee name, email, and mobile number are required'
+            message: 'Employee name and employee ID are required'
+            //message: 'Employee name, employee ID, email, and mobile number are required'
           });
           return;
         }
@@ -136,10 +137,12 @@ class FormsController
     return new Promise((resolve, reject) => {
       try {
         // Validate employee info
-        if (!employeeInfo || !employeeInfo.name || !employeeInfo.email || !employeeInfo.mobileNo) {
+        // Validate employee info
+        if (!employeeInfo || !employeeInfo.name || !employeeInfo.employeeId /*|| !employeeInfo.email || !employeeInfo.mobileNo*/) {
           reject({
             status: 'error',
-            message: 'Employee name, email, and mobile number are required'
+            message: 'Employee name and employee ID are required'
+            //message: 'Employee name, employee ID, email, and mobile number are required'
           });
           return;
         }
@@ -190,6 +193,85 @@ class FormsController
         reject({
           status: 'error',
           message: 'An unexpected error occurred while retrieving employee forms'
+        });
+      }
+    });
+  }
+
+  getAllEmployees() {
+    return new Promise((resolve, reject) => {
+      try {
+        // Get all unique employees from the database
+        this.formDatabase.getAllEmployees(this.collectionName)
+          .then(employees => {
+            console.log("All employees found:", employees);
+            
+            resolve({
+              status: 'success',
+              message: 'Employees retrieved successfully',
+              data: employees
+            });
+          })
+          .catch(err => {
+            reject({
+              status: 'error',
+              message: 'Failed to retrieve employees from database',
+              data: null,
+              error: err.message || err
+            });
+          });
+      } catch (error) {
+        reject({
+          status: 'error',
+          message: 'An unexpected error occurred while retrieving employees'
+        });
+      }
+    });
+  }
+
+  getEmployeeByCode(employeeCode) {
+    return new Promise((resolve, reject) => {
+      try {
+        // Validate employee code
+        if (!employeeCode) {
+          reject({
+            status: 'error',
+            message: 'Employee code is required'
+          });
+          return;
+        }
+        
+        // Get employee details by employee code
+        this.formDatabase.getEmployeeByCode(this.collectionName, employeeCode)
+          .then(employee => {
+            if (!employee) {
+              reject({
+                status: 'error',
+                message: 'Employee not found'
+              });
+              return;
+            }
+            
+            console.log("Employee found by code:", employee);
+            
+            resolve({
+              status: 'success',
+              message: 'Employee retrieved successfully',
+              data: employee
+            });
+          })
+          .catch(err => {
+            reject({
+              status: 'error',
+              message: 'Failed to retrieve employee from database',
+              data: null,
+              error: err.message || err
+            });
+          });
+      } catch (error) {
+        reject({
+          status: 'error',
+          message: 'An unexpected error occurred while retrieving employee'
         });
       }
     });

@@ -3,6 +3,8 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import TabNavigationComponent from './TabNavigationComponent';
+import './InventoryTableComponent.css';
 
 ModuleRegistry.registerModules([ AllCommunityModule ]);
 
@@ -10,6 +12,14 @@ class InventoryTableComponent extends Component {
   constructor(props) {
     super(props);
     this.gridApi = null;
+    // Add state for active tab, user history, and expanded item histories
+    this.state = {
+      activeTab: props.activeTab || 'general',
+      showUserHistory: false,
+      userHistory: [],
+      selectedRowIndex: null,
+      expandedItemHistories: new Set() // Track which item histories are expanded
+    };
   }
 
   componentDidUpdate(prevProps) {
@@ -17,6 +27,11 @@ class InventoryTableComponent extends Component {
     if (prevProps.data !== this.props.data && this.gridApi) {
       console.log('InventoryTableComponent: Data updated, refreshing grid');
       //this.gridApi.setRowData(this.props.data || []);
+    }
+    
+    // Update tab state if prop changes
+    if (prevProps.activeTab !== this.props.activeTab) {
+      this.setState({ activeTab: this.props.activeTab });
     }
   }
 
@@ -563,14 +578,282 @@ class InventoryTableComponent extends Component {
     });
   };
 
-  render() {
-    const { 
-      data = [], 
-      isLoading = false, 
-      lastUpdate = null 
-    } = this.props;
+  // Tab handling function
+  handleTabChange = (tabName) => {
+    console.log(`Switching to ${tabName} tab`);
+    this.setState({ activeTab: tabName });
+    
+    // Call parent component's callback if provided
+    if (this.props.onTabChange) {
+      this.props.onTabChange(tabName);
+    }
 
-    const columnDefs = [
+    // Force grid to refresh columns after tab change
+    if (this.gridApi) {
+      setTimeout(() => {
+        console.log(`Applying column definitions for ${tabName} tab`);
+        const newColumnDefs = this.getColumnDefsForTab(tabName);
+        console.log(`Setting ${newColumnDefs.length} columns for ${tabName} tab`);
+        this.gridApi.setColumnDefs(newColumnDefs);
+        this.gridApi.sizeColumnsToFit();
+      }, 100);
+    }
+  };
+
+  // Handle export data for the export functionality
+  handleExportData = (tabId) => {
+    const { data = [] } = this.props;
+    
+    if (data.length === 0) {
+      return [['No data available']];
+    }
+
+    // Get column definitions for the specific tab
+    const columnDefs = this.getColumnDefsForTab(tabId);
+    
+    // Create headers row (excluding S/N column)
+    const headers = columnDefs
+      .filter(col => col.headerName !== 'S/N')
+      .map(col => col.headerName);
+    
+    // Create data rows
+    const rows = data.map(item => {
+      return columnDefs
+        .filter(col => col.headerName !== 'S/N')
+        .map(col => {
+          let value = item[col.field] || '';
+          
+          // Format dates if needed
+          if (col.headerName.includes('Date') && value) {
+            try {
+              value = this.formatDate(value);
+            } catch (e) {
+              // Keep original value if formatting fails
+            }
+          }
+          
+          // Handle special cases
+          if (col.headerName === 'Original Price' && value) {
+            const parsedPrice = this.parsePrice(value);
+            value = parsedPrice ? `$${parsedPrice.toFixed(2)}` : value;
+          }
+          
+          return value;
+        });
+    });
+    
+    // Return array of arrays with headers as first row
+    return [headers, ...rows];
+  };
+
+  // Toggle user history visibility
+  toggleUserHistory = (index) => {
+    this.setState(prevState => {
+      // Check if clicking on the same row that's already selected
+      if (prevState.showUserHistory && prevState.selectedRowIndex === index) {
+        // Same row clicked - hide the history (toggle off)
+        console.log('Hiding user history for row', index);
+        return {
+          showUserHistory: false,
+          userHistory: [],
+          selectedRowIndex: null
+        };
+      } else {
+        // Different row clicked or no history currently showing - show history for this row
+        const userHistory = this.generateUserHistory(index);
+        console.log('Showing history for row', index, ':', userHistory);
+        
+        return {
+          showUserHistory: true,
+          userHistory: userHistory,
+          selectedRowIndex: index
+        };
+      }
+    });
+  };
+
+  // Helper function to determine the latest activity date from check-in, check-out, and last amendment dates
+  getLatestActivityDate = (checkInDate, checkOutDate, lastAmendmentOn) => {
+    const dates = [];
+    
+    // Parse dates and add to array if valid
+    if (checkInDate) {
+      const parsedDate = this.parseDate(checkInDate);
+      if (parsedDate) dates.push(parsedDate);
+    }
+    
+    if (checkOutDate) {
+      const parsedDate = this.parseDate(checkOutDate);
+      if (parsedDate) dates.push(parsedDate);
+    }
+    
+    if (lastAmendmentOn) {
+      const parsedDate = this.parseDate(lastAmendmentOn);
+      if (parsedDate) dates.push(parsedDate);
+    }
+    
+    // Return the most recent date, or null if no valid dates found
+    return dates.length > 0 ? new Date(Math.max(...dates)) : null;
+  };
+
+  // Helper function to parse various date formats into Date objects
+  parseDate = (dateValue) => {
+    if (!dateValue) return null;
+    
+    try {
+      // If it's already a Date object
+      if (dateValue instanceof Date) {
+        return dateValue;
+      }
+      
+      // If it's a string, try to parse it
+      if (typeof dateValue === 'string') {
+        let dateStr = dateValue.trim();
+        
+        // Handle dd/mm/yyyy or d/m/yy formats
+        if (dateStr.includes('/')) {
+          const parts = dateStr.split('/');
+          if (parts.length === 3) {
+            let [day, month, year] = parts;
+            day = parseInt(day);
+            month = parseInt(month);
+            year = parseInt(year);
+            
+            // Handle 2-digit year
+            if (year < 100) {
+              year = year <= 30 ? 2000 + year : 1900 + year;
+            }
+            
+            // Create date object (month is 0-indexed in JS)
+            return new Date(year, month - 1, day);
+          }
+        }
+        
+        // Try direct parsing for other formats
+        const parsedDate = new Date(dateStr);
+        return isNaN(parsedDate.getTime()) ? null : parsedDate;
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Error parsing date:', dateValue, error);
+      return null;
+    }
+  };
+
+  // Generate user history from the current data
+  generateUserHistory = (selectedRowIndex) => {
+    const { data = [] } = this.props;
+  
+    // If a specific row index is provided, show only that row's history
+    if (selectedRowIndex !== null && selectedRowIndex >= 0 && selectedRowIndex < data.length) {
+      const selectedItem = data[selectedRowIndex];
+
+      
+      // Safely access userHistory with null checks
+      const userHistory = selectedItem._userHistory || null;
+
+      console.log(`Showing history for row ${selectedRowIndex + 1}:`, userHistory);
+      return userHistory;
+    }
+  };
+
+  // Toggle individual item history
+  toggleItemHistory = (rowIndex) => {
+    this.setState(prevState => {
+      const newExpandedHistories = new Set(prevState.expandedItemHistories);
+      
+      if (newExpandedHistories.has(rowIndex)) {
+        newExpandedHistories.delete(rowIndex);
+      } else {
+        newExpandedHistories.add(rowIndex);
+      }
+      
+      return {
+        expandedItemHistories: newExpandedHistories
+      };
+    });
+  };
+
+  // Get history for a specific item
+  getItemHistory = (item) => {
+    if (!item) return null;
+
+    return {
+      basicInfo: {
+        category: item._category,
+        brand: item._brand,
+        model: item._model,
+        serialNumber: item._serialNumber,
+        assetsIdTag: item._assetsIdTag
+      },
+      purchaseInfo: {
+        purchaseDate: this.formatDate(item._purchaseDate),
+        originalPrice: item._originalPrice,
+        currentNetBookValue: this.calculateCurrentNetBookValue(item._originalPrice, item._purchaseDate),
+        durationSincePurchase: this.calculateMonthsSincePurchase(item._purchaseDate)
+      },
+      warrantyInfo: {
+        warrantyInformation: item._warrantyInformation,
+        warrantyStartDate: this.formatDate(item._warrantyStartDate),
+        warrantyEndDate: this.formatDate(item._warrantyEndDate),
+        warrantyStatus: this.calculateWarrantyStatus(item._warrantyStartDate, item._warrantyEndDate)
+      },
+      assignmentInfo: {
+        assignedUser: item._assignedUser,
+        location: item._location,
+        status: item._status,
+        checkInDate: this.formatDate(item._checkInDate),
+        checkOutDate: this.formatDate(item._checkOutDate)
+      },
+      technicalInfo: {
+        osType: item._osType,
+        osVersion: item._osVersion,
+        ipAddressIPv4: item._ipAddressIPv4,
+        ipAddressIPv6: item._ipAddressIPv6,
+        macAddress: item._macAddress
+      },
+      additionalInfo: {
+        notes: item._notes,
+        lastAmendmentOn: this.formatDate(item._lastAmendmentOn),
+        date: item._date,
+        time: item._time
+      }
+    };
+  };
+
+  // Render tab navigation
+  renderTabNavigation = () => {
+    const { activeTab } = this.state;
+    
+    const tabs = [
+      { id: 'general', label: 'General', icon: '📋' },
+      { id: 'finance', label: 'Finance', icon: '💰' },
+      { id: 'admin', label: 'Admin', icon: '⚙️' },
+      { id: 'it', label: 'IT', icon: '💻' }
+    ];
+
+    return (
+      <div className="tab-navigation">
+        <div className="tab-buttons-container">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => this.handleTabChange(tab.id)}
+            >
+              <div className="tab-button-logo">{tab.icon}</div>
+              <div className="tab-button-label">{tab.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Get column definitions based on active tab
+  getColumnDefsForTab = (activeTab) => {
+    const allColumnDefs = [
       { 
         headerName: 'S/N', 
         width: 80,
@@ -578,7 +861,31 @@ class InventoryTableComponent extends Component {
         valueGetter: (params) => {
           return params.node.rowIndex + 1;
         },
-        cellStyle: (params) => this.getCellStyle({}, params.node.rowIndex + 1)
+        cellStyle: (params) => ({
+          ...this.getCellStyle({}, params.node.rowIndex + 1),
+          cursor: 'pointer',
+          userSelect: 'none'
+        }),
+        cellRenderer: (params) => {
+          const rowIndex = params.node.rowIndex;
+          return (
+            <div 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px',
+                fontWeight: 'bold'
+              }}
+              onClick={() => this.toggleUserHistory(rowIndex)}
+              title="Click to toggle user assignment history and statistics"
+            >
+              <span>{rowIndex + 1}</span>
+              <span style={{ fontSize: '10px', color: '#7f8c8d' }}>
+                {this.state.showUserHistory ? '📊' : '📈'}
+              </span>
+            </div>
+          );
+        }
       },
       { 
         field: '_category', 
@@ -873,6 +1180,73 @@ class InventoryTableComponent extends Component {
       }
     ];
 
+    // Define which columns to show for each tab
+    const tabColumnMapping = {
+      general: [
+        'S/N', 'Category', 'Brand', 'Model', 'Serial Number', 'Purchase Date', 
+        'Original Price', 'Current Net Book Value', 'Duration since Purchase (mth)', 
+        'Warranty Information', 'Warranty Start Date', 'Warranty End Date', 
+        'Warranty Status', 'Assigned User', 'Location', 'Status', 'Assets ID Tag', 
+        'Check-in Date', 'Check-out Date', 'OS Type', 'OS Version', 'Date', 'Time',
+        'IP address (IPv4)', 'IP address (IPv6)', 'MAC address', 'Notes', 
+        'Last Amendment On'
+      ],
+      finance: [
+        'S/N', 'Category', 'Brand', 'Model', 'Serial Number', 'Purchase Date',
+        'Original Price', 'Current Net Book Value', 'Duration since Purchase (mth)',
+        'Assigned User', 'Location', 'Status', 'Assets ID Tag', 'Check-in Date',
+        'Check-out Date', 'Notes', 'Last Amendment On'
+      ],
+      admin: [
+        "S/N", "Category", "Brand", "Model", "Serial Number", "Warranty Information", 
+        "Warranty Start Date", "Warranty Status", "Assigned User", "Location", "Assets ID Tag",
+        "Status", "Check-in Date", "Check-out Date", "Notes", "Last Amendment On"
+      ],
+      it: [
+        "S/N", "Category", "Brand", "Model", "Serial Number", "Assigned User", 
+        "Location", "Assets ID Tag", "Status", "Check-in Date", "Check-out Date", 
+        "OS Type", "OS Version", "Date", "Time", "IP address (IPv4)", "IP address (IPv6)", 
+        "MAC address", "Notes", "Last Amendment On"
+      ]
+    };
+
+    // Filter columns based on active tab
+    const allowedColumns = tabColumnMapping[activeTab] || tabColumnMapping.general;
+    const filteredColumns = allColumnDefs.filter(col => allowedColumns.includes(col.headerName));
+    
+    // For non-general tabs, adjust pinned columns to ensure proper display
+    if (activeTab !== 'general') {
+      filteredColumns.forEach((col, index) => {
+        // Only pin the first 4 columns for non-general tabs
+        if (index < 4) {
+          col.pinned = 'left';
+        } else {
+          delete col.pinned;
+        }
+      });
+    }
+    
+    console.log('Tab filtering:', {
+      activeTab,
+      allowedColumnsCount: allowedColumns.length,
+      filteredColumnsCount: filteredColumns.length,
+      allowedColumns: allowedColumns.slice(0, 5), // First 5 for debugging
+      filteredHeaders: filteredColumns.map(col => col.headerName).slice(0, 5) // First 5 for debugging
+    });
+    
+    return filteredColumns;
+  };
+
+  render() {
+    const { 
+      data = [], 
+      isLoading = false, 
+      lastUpdate = null 
+    } = this.props;
+
+    const { activeTab } = this.state;
+    const columnDefs = this.getColumnDefsForTab(activeTab);
+
     const rowData = data.length > 0 ? data : [];
     
     // Enhanced debugging - log the actual data structure
@@ -930,7 +1304,16 @@ class InventoryTableComponent extends Component {
     const gridOptions = {
       onGridReady: (params) => {
         this.gridApi = params.api;
+        this.gridColumnApi = params.columnApi;
+        console.log('Grid ready, setting up with activeTab:', activeTab);
         this.setupHoverSync();
+        // Initial column sizing and ensure correct tab columns are shown
+        setTimeout(() => {
+          const initialColumnDefs = this.getColumnDefsForTab(activeTab);
+          console.log(`Initial load: Setting ${initialColumnDefs.length} columns for ${activeTab} tab`);
+          params.api.setColumnDefs(initialColumnDefs);
+          params.api.sizeColumnsToFit();
+        }, 100);
       },
       onRowMouseEnter: (event) => {
         this.handleRowHover(event.rowIndex, true);
@@ -950,6 +1333,11 @@ class InventoryTableComponent extends Component {
             </span>
           )}
         </h2>
+        <TabNavigationComponent 
+          activeTab={activeTab}
+          onTabChange={this.handleTabChange}
+          onExportData={this.handleExportData}
+        />
         <div className="ag-theme-alpine-custom table-wrapper">
           <AgGridReact
             columnDefs={columnDefs}
@@ -968,6 +1356,40 @@ class InventoryTableComponent extends Component {
             loading={isLoading}
           />
         </div>
+        
+        {/* User History Section - Toggled by clicking S/N column */}
+        {this.state.showUserHistory && (
+          <div className="user-history-section">
+            <div className="user-history-content">
+              <div className="user-history-summary">
+                <h3>User Assignment History</h3>
+                {Array.isArray(this.state.userHistory) && this.state.userHistory.length > 0 ? (
+                  <div className="user-history-list">
+                    {this.state.userHistory.map((historyItem, index) => (
+                      <div key={index} className="user-history-item">
+                        <div className="user-info">
+                          <strong>User:</strong> {historyItem.User || 'Unknown User'}
+                        </div>
+                        <div className="date-period">
+                          <strong>Date Period:</strong>
+                          <div className="date-range">
+                            <span>Start Date: {historyItem['Date Period']?.['Start Date'] || 'N/A'}</span>
+                            <span>End Date: {historyItem['Date Period']?.['End Date'] || 'Ongoing'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-history">
+                    <p>No user assignment history available for this item.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+              
       </>
     );
   }

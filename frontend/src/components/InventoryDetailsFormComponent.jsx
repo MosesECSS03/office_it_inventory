@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import axios from 'axios'
+import './EquipmentInventoryForm.css'
 
  const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
   ? "http://localhost:3001" 

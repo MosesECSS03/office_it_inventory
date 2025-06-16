@@ -30,6 +30,7 @@ class InventoryItem {
     this._macAddress = '';
     this._notes = '';
     this._lastAmendmentOn = '';
+    this._userHistory = [];
   }
 
   // Category getter and setter
@@ -264,6 +265,14 @@ class InventoryItem {
 
   setLastAmendmentOn(lastAmendmentOn) {
     this._lastAmendmentOn = lastAmendmentOn;
+  }
+
+  getUserHistory() {
+    return this._userHistory;
+  }
+
+  setUserHistory(userHistory) {
+    this._userHistory = userHistory;
   }
 }
 
