@@ -5,6 +5,8 @@
   border-radius: 8px;
   background: #fafafa;
   overflow: hidden;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 /* Individual Item History Section Styles */
