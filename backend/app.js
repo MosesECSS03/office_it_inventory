@@ -11,6 +11,7 @@ const corsOptions = {
     'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
     'https://ecss-it-inventory-frontend.azurewebsites.net', // Your Azure frontend
+    /^https:\/\/.*\.azurestaticapps\.net$/, // Any Azure Static Web Apps domain
     // Add any other domains where your frontend might be hosted
   ],
   credentials: true,
