@@ -1460,6 +1460,7 @@ class InventoryDetailsFormComponent extends Component {
                     value={this.state.formData.itemType}
                     onChange={this.handleInputChange}
                     style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
+                    placeholder='e.g., Laptop, Monitor, Printer'
                   />
                 </div>
                 <div className="form-field">
@@ -1471,6 +1472,7 @@ class InventoryDetailsFormComponent extends Component {
                     value={this.state.formData.brand}
                     onChange={this.handleInputChange}
                     style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
+                    placeholder='e.g., Dell, HP, Apple'
                   />
                 </div>
                 <div className="form-field">
@@ -1482,6 +1484,7 @@ class InventoryDetailsFormComponent extends Component {
                     value={this.state.formData.model}
                     onChange={this.handleInputChange}
                     style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
+                    placeholder='e.g., XPS 13, EliteBook 840, MacBook Pro'
                   />
                 </div>
                 <div className="form-field">
@@ -1493,6 +1496,7 @@ class InventoryDetailsFormComponent extends Component {
                     value={this.state.formData.serialNumber}
                     onChange={this.handleInputChange}
                     style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
+                    placeholder='e.g., ABC123456789'
                   />
                 </div>
               </div>
@@ -1513,6 +1517,7 @@ class InventoryDetailsFormComponent extends Component {
                     value={this.state.formData.purchaseDate}
                     onChange={this.handleInputChange}
                     style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
+                    placeholder="dd/mm/yyyy"
                   />
                 </div>
                 <div className="form-field">
@@ -1525,6 +1530,7 @@ class InventoryDetailsFormComponent extends Component {
                     onChange={this.handleInputChange}
                     style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     step="0.01"
+                    placeholder='e.g., 0.00'
                   />
                 </div>
                 <div className="form-field">
@@ -1536,6 +1542,7 @@ class InventoryDetailsFormComponent extends Component {
                     value={this.state.formData.date}
                     onChange={this.handleInputChange}
                     style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
+                    placeholder="dd/mm/yyyy"
                   />
                 </div>
                 <div className="form-field">

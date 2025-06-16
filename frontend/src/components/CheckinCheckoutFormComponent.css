@@ -53,6 +53,20 @@
   position: relative;
 }
 
+/* Table container within modal */
+.checkin-checkout-table-modal .table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure table has proper positioning context for sticky headers */
+.checkin-checkout-table-modal .checkin-checkout-table {
+  position: relative;
+  z-index: 1;
+}
+
 /* Modal Header */
 .modal-header {
   display: flex;
@@ -101,6 +115,8 @@
   padding: 30px;
   color: #333 !important;
   background: #ffffff !important;
+  position: relative;
+  overflow: visible;
 }
 
 .modal-body * {
@@ -668,6 +684,39 @@
     gap: 10px;
     text-align: center;
   }
+}
+
+/* Table Header Sticky Positioning */
+.checkin-checkout-table th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.checkin-checkout-table thead tr:nth-child(2) th {
+  position: sticky !important;
+  top: 48px !important;
+  z-index: 999 !important;
+  background: #333333 !important;
+  color: #ffffff !important;
+}
+
+.header-cell {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.sub-header {
+  position: sticky !important;
+  top: 48px !important;
+  z-index: 999 !important;
+  background: #333333 !important;
+  color: #ffffff !important;
 }
 
 /* Force consistent styling */
