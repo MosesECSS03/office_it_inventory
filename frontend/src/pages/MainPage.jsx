@@ -12,6 +12,10 @@ import CheckinCheckoutButtonComponent from '../components/CheckinCheckoutButtonC
 import InventoryDetailsButtonComponent from '../components/InventoryDetailsButtonComponent'
 import FooterComponent from '../components/FooterComponent'
 
+const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+  ? "http://localhost:3001" 
+  : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
+
 class MainPage extends Component {
     constructor(props) {
     super(props);
@@ -34,9 +38,6 @@ class MainPage extends Component {
   componentDidMount() {
     // Initialize data when component mounts
     this.initializeData();
-      const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-        ? "http://localhost:3001" 
-        : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
     
     // Connect to socket
     this.socket = io(baseURL);
@@ -62,12 +63,6 @@ class MainPage extends Component {
   initializeData = async () => {
     try {
       this.setState({ isLoading: true });
-
-      // Base URL for the backend API
-      const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-        ? "http://localhost:3001" 
-        : "https://ecss-it-inventory-backend.azurewebsites.net"}`;
-
       // Make parallel requests to get both inventory data and statistics
       const inventoryResponse = await axios.post(`${baseURL}/inventory`, {
           purpose: "retrieve",
