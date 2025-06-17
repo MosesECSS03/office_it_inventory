@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainPage from './pages/MainPage'
 import './App.css'
 
+
 class App extends Component {
   componentDidMount() {
     // Prevent browser back navigation on swipe gestures

@@ -65,7 +65,8 @@ class FormDatabase {
   async updateEmployeeInventory(collectionName, formData) {
     try {
       // Validate required fields
-      if (!formData.name || !formData.employeeId || !formData.email) {
+      if (!formData.name || !formData.employeeId){ //!!formData.email) {
+        throw new Error('Employee name and employee ID are required');
         throw new Error('Employee name, employee ID, and email are required');
       }
 

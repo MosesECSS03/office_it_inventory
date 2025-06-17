@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import '../css/ActionButtonsComponent.css'
 
 class InventoryDetailsButtonComponent extends Component {
   handleClick = (e) => {

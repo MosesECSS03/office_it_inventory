@@ -152,12 +152,44 @@ class InventoryController
               updateData['Check-in Date'] = new Date().toLocaleDateString('en-GB');
               updateData['Check-out Date'] = ''; // Clear check-out date on return";
               updateData['Assigned User'] = ''; // Clear assigned user on return
+              
+              // Update User History - set end date for current assigned user
+              if (existingItem && existingItem['User History'] && existingItem['Assigned User']) {
+                let userHistory = Array.isArray(existingItem['User History']) ? [...existingItem['User History']] : [];
+                const currentAssignedUser = existingItem['Assigned User'];
+                
+                // Find the entry for the current assigned user and set end date
+                for (let i = userHistory.length - 1; i >= 0; i--) {
+                  if (userHistory[i]['User'] === currentAssignedUser && userHistory[i]['Date Period']) {
+                    userHistory[i]['Date Period']['End Date'] = new Date().toLocaleDateString('en-GB');
+                    break;
+                  }
+                }
+                
+                updateData['User History'] = userHistory;
+              }
             } else if (inventoryItem.action !== 'checkin') {
               // For check-out, update, or add new: set Assigned User and Check-out Date
               updateData['Location'] =  '';
               updateData['Assigned User'] = userName || '';
               updateData['Check-out Date'] = new Date().toLocaleDateString('en-GB');
-              updateData['Check-in Date'] = ''; // Clear check-out date on return";
+              updateData['Check-in Date'] = ''; // Clear check-in date on checkout
+              
+              // Update User History - add new entry for checkout
+              if (existingItem && userName) {
+                let userHistory = Array.isArray(existingItem['User History']) ? [...existingItem['User History']] : [];
+                
+                // Add new user history entry for checkout
+                userHistory.push({
+                  "User": userName,
+                  "Date Period": {
+                    "Start Date": new Date().toLocaleDateString('en-GB'),
+                    "End Date": ""
+                  }
+                });
+                
+                updateData['User History'] = userHistory;
+              }
             }
             
             return await this.inventoryDatabase.updateByAssetTag(inventoryItem.ecssInventoryNo, updateData);

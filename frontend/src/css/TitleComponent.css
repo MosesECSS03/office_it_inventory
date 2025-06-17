@@ -1,0 +1,65 @@
+/* Title Component Styles */
+.title-component {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.title-component h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+/* Title Section Styles (when positioned below tabs) */
+.title-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(5px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title-section .title-component {
+  flex: none;
+  display: flex;
+  justify-content: left;
+}
+
+.title-section .title-component h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .title-section {
+    padding: 0.8rem 1rem;
+  }
+  
+  .title-section .title-component h1 {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title-component h1 {
+    font-size: 1.5rem;
+  }
+
+  .title-section .title-component h1 {
+    font-size: 1.4rem;
+  }
+}

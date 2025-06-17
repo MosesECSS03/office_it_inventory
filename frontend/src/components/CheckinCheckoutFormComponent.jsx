@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import axios from 'axios'
-import './CheckinCheckoutFormComponent.css'
+import '../css/CheckinCheckoutFormComponent.css'
+import '../css/TableComponent.css'
+import '../css/ModalComponents.css'
 
 const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
   ? "http://localhost:3001" 
@@ -42,11 +44,16 @@ class CheckinCheckoutFormComponent extends Component {
       // Employee dropdown state for existing tab
       employees: [], // List of all employees
       showEmployeeDropdown: false, // Show/hide employee dropdown
-      employeeSearchTerm: '' // Search term for employee dropdown
+      employeeSearchTerm: '', // Search term for employee dropdown
+      showAllEmployees: false // Flag to show all employees on click
     };
     
     // Timeout for debouncing inventory fetch
     this.fetchInventoryTimeout = null;
+    
+    // Refs for dropdowns
+    this.employeeInputRef = React.createRef();
+    this.inventoryInputRefs = {}; // Store refs for inventory inputs by row index
   }
 
   componentDidMount() {
@@ -155,28 +162,28 @@ class CheckinCheckoutFormComponent extends Component {
 
   // Fetch all employees for dropdown
   fetchAllEmployees = async () => {
+    console.log('🔍 Fetching all employees for dropdown...');
     try {
-      console.log('Fetching employees from:', `${baseURL}/forms`);
       const response = await axios.post(`${baseURL}/forms`, {
         purpose: 'getAllEmployees'
       });
       
-      console.log('Full employee response:', response.data);
+      console.log('📋 Employee fetch response:', response.data);
       
       if (response.data && response.data.status === 'success') {
         const employeeData = response.data.data || [];
         this.setState({ 
           employees: employeeData
+        }, () => {
+          console.log('✅ Employees loaded and state updated:', this.state.employees.length, 'employees');
+          console.log('👥 Employee list:', this.state.employees);
         });
-        console.log('Employees loaded for dropdown:', employeeData);
-        console.log('Number of employees loaded:', employeeData.length);
       } else {
-        console.error('Failed to fetch employees - bad response:', response.data);
+        console.error('❌ Failed to fetch employees - invalid response');
         this.setState({ employees: [] });
       }
     } catch (error) {
-      console.error('Error fetching employees:', error);
-      console.error('Error details:', error.response?.data);
+      console.error('❌ Error fetching employees:', error);
       this.setState({ employees: [] });
     }
   }
@@ -198,7 +205,7 @@ class CheckinCheckoutFormComponent extends Component {
       employeeSearchTerm: ''
     });
 
-    // Fetch employees when switching to existing tab
+    // Fetch employees when switching to existing tab - ensure they're loaded immediately
     if (tab === 'existing') {
       this.fetchAllEmployees();
     }
@@ -706,6 +713,23 @@ class CheckinCheckoutFormComponent extends Component {
     }));
   }
 
+  // Handle input click to show all available items
+  handleInventoryNoClick = (rowIndex) => {
+    // Get all suggestions (show all items when clicked)
+    const suggestions = this.getAllSuggestions();
+    
+    this.setState(prevState => ({
+      searchSuggestions: {
+        ...prevState.searchSuggestions,
+        [rowIndex]: suggestions
+      },
+      searchDropdowns: {
+        ...prevState.searchDropdowns,
+        [rowIndex]: suggestions.length > 0
+      }
+    }));
+  }
+
   findInventoryItem = (searchValue) => {
     // Use props data if available, otherwise use sample data for testing
     const dataToSearch = this.props.data;
@@ -1112,39 +1136,65 @@ class CheckinCheckoutFormComponent extends Component {
               <div className="form-row">
                 <div className="form-group">
                   <label>Employee ID: <span className="required">*</span></label>
-                  <div className="search-dropdown-container">
+                  <div className="search-dropdown-container" style={{ position: 'relative' }}>
                     <input
+                      ref={this.employeeInputRef}
                       type="text"
                       value={this.state.employeeSearchTerm || ''}
                       onChange={(e) => this.handleEmployeeCodeChange(e.target.value)}
+                      onClick={() => {
+                        console.log('Input clicked - showing dropdown');
+                        // Show dropdown immediately on click with all employees
+                        this.setState({ 
+                          showEmployeeDropdown: true, 
+                          showAllEmployees: true 
+                        });
+                        // Ensure employees are loaded
+                        if (this.state.employees.length === 0) {
+                          console.log('Loading employees on click...');
+                          this.fetchAllEmployees();
+                        }
+                      }}
                       onFocus={() => {
-                        console.log('Employee input focused, setting dropdown visible');
+                        console.log('Input focused - showing dropdown');
+                        // Ensure employees are loaded and show dropdown
                         this.setState({ showEmployeeDropdown: true });
+                        if (this.state.employees.length === 0) {
+                          console.log('Loading employees on focus...');
+                          this.fetchAllEmployees();
+                        }
                       }}
                       onBlur={() => {
-                        console.log('Employee input blurred, hiding dropdown in 200ms');
-                        setTimeout(() => this.setState({ showEmployeeDropdown: false }), 200);
+                        // Delay hiding to allow clicks on dropdown items
+                        setTimeout(() => {
+                          this.setState({ showEmployeeDropdown: false });
+                        }, 300);
                       }}
                       className={`form-control underline-input ${errors.employeeId ? 'error' : ''}`}
                       placeholder="Type employee ID or name to search..."
                     />
+                    
+                    {/* Employee dropdown rendered externally with modal constraints */}
                     {this.state.showEmployeeDropdown && (
-                      <div className="search-dropdown employee-dropdown">
-                        {this.getFilteredEmployees().map((employee, index) => (
+                      <div 
+                        className="employee-dropdown-internal"
+                        style={this.getEmployeeDropdownStyle()}
+                      >
+                        {this.getEmployeeSearchResults().map((employee, index) => (
                           <div
                             key={employee.employeeId}
-                            className="search-dropdown-item employee-dropdown-item"
+                            className="employee-dropdown-item"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => this.handleEmployeeSelect(employee)}
                           >
-                            <div className="employee-info">
-                              <div className="employee-code">{employee.employeeId}</div>
-                              <div className="employee-name">{employee.name}</div>
+                            <div className="employee-search-info">
+                              <div className="employee-search-code">{employee.employeeId}</div>
+                              <div className="employee-search-name">{employee.name}</div>
                             </div>
                           </div>
                         ))}
-                        {this.getFilteredEmployees().length === 0 && (
-                          <div className="search-dropdown-item no-results">
+                        {this.getEmployeeSearchResults().length === 0 && (
+                          <div className="employee-dropdown-item no-results">
                             No employees found
                           </div>
                         )}
@@ -1378,10 +1428,12 @@ class CheckinCheckoutFormComponent extends Component {
           <div className="search-dropdown-container">
             <div className="input-with-clear">
               <input
+                ref={(ref) => this.inventoryInputRefs[index] = ref}
                 type="text"
                 value={row.ecssInventoryNo || ''}
                 onChange={(e) => this.handleInventoryNoChange(index, e.target.value)}
                 onFocus={() => this.handleInventoryNoFocus(index)} // Show dropdown on focus
+                onClick={() => this.handleInventoryNoClick(index)} // Show all items on click
                 onBlur={() => setTimeout(() => this.hideSearchDropdown(index), 200)} // Increased delay to allow click on suggestion
                 onKeyDown={(e) => this.handleInventoryInputKeyDown(index, e)} // Handle escape key and other shortcuts
                 className={`table-input ${rowErrors.ecssInventoryNo ? 'error' : ''}`}
@@ -1399,30 +1451,8 @@ class CheckinCheckoutFormComponent extends Component {
                 </button>
               )}
             </div>
+            {rowErrors.ecssInventoryNo && <span className="cell-error">{rowErrors.ecssInventoryNo}</span>}
           </div>
-           
-            {/* Search Dropdown - Show for any results */}
-            {hasDropdown && (
-              <div 
-                className="search-dropdown"
-                onMouseDown={(e) => e.preventDefault()} // Prevent input blur when clicking dropdown
-              >
-                {this.state.searchSuggestions[index].map((suggestion, suggestionIndex) => (
-                  <div
-                    key={suggestionIndex}
-                    className="search-dropdown-item"
-                    onMouseDown={(e) => {
-                      e.preventDefault(); // Prevent input blur
-                      this.handleSuggestionSelect(index, suggestion);
-                    }}
-                    onClick={() => this.handleSuggestionSelect(index, suggestion)}
-                  >
-                    <div className="suggestion-value">{suggestion.value}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          {rowErrors.ecssInventoryNo && <span className="cell-error">{rowErrors.ecssInventoryNo}</span>}
         </td>
         
         <td>
@@ -1526,7 +1556,10 @@ class CheckinCheckoutFormComponent extends Component {
   render() {
     const { isVisible, currentPage, totalPages, errors, successMessage, isSubmitting, activeTab, activeSubTab } = this.state;
 
-    if (!isVisible) return null;
+    // Use the prop isVisible if provided, otherwise use internal state
+    const shouldShow = this.props.isVisible !== undefined ? this.props.isVisible : isVisible;
+    
+    if (!shouldShow) return null;
 
     const getFormTitle = () => {
       if (activeTab === 'new') {
@@ -1544,7 +1577,7 @@ class CheckinCheckoutFormComponent extends Component {
       }
     };
 
-    return (
+    return (  
       <div className="modal-overlay">
         <div className="modal-content checkin-checkout-table-modal">
           <div className="modal-header">
@@ -1618,37 +1651,139 @@ class CheckinCheckoutFormComponent extends Component {
             </form>
           </div>
         </div>
+        
+        {/* External inventory dropdowns rendered outside modal for maximum visibility */}
+        {Object.keys(this.state.searchDropdowns).map(rowIndex => {
+          const shouldShow = this.state.searchDropdowns[rowIndex] && 
+                           this.state.searchSuggestions[rowIndex] && 
+                           this.state.searchSuggestions[rowIndex].length > 0;
+          
+          if (!shouldShow) return null;
+          
+          return (
+            <div
+              key={`inventory-dropdown-${rowIndex}`}
+              className="inventory-suggestions-dropdown-internal"
+              style={this.getInventoryDropdownStyle(parseInt(rowIndex))}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              {this.state.searchSuggestions[rowIndex].map((suggestion, suggestionIndex) => (
+                <div
+                  key={suggestionIndex}
+                  className="inventory-suggestion-item"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    this.handleSuggestionSelect(parseInt(rowIndex), suggestion);
+                  }}
+                  onClick={() => this.handleSuggestionSelect(parseInt(rowIndex), suggestion)}
+                >
+                  <div className="suggestion-value">{suggestion.value}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
       </div>
     );
   }
 
-  // Get all available items for dropdown
+  // Sort suggestions by asset tag number (CE/ECSS/no/year format)
+  sortSuggestionsByAssetNumber = (suggestions) => {
+    const sorted = suggestions.sort((a, b) => {
+      const getAssetNumber = (assetTag) => {
+        // Extract number from formats like "CE/001/2024" or "ECSS/001/2024"
+        const match = assetTag.match(/^(CE|ECSS)\/(\d+)\/(\d{4})$/);
+        if (match) {
+          const [, prefix, number, year] = match;
+          return {
+            prefix,
+            number: parseInt(number, 10),
+            year: parseInt(year, 10),
+            fullTag: assetTag
+          };
+        }
+        // Fallback for other formats - treat as string
+        return {
+          prefix: '',
+          number: 999999, // Put non-standard formats at the end
+          year: 9999,
+          fullTag: assetTag
+        };
+      };
+
+      const aData = getAssetNumber(a.value);
+      const bData = getAssetNumber(b.value);
+
+      // First sort by prefix (CE vs ECSS)
+      if (aData.prefix !== bData.prefix) {
+        return aData.prefix.localeCompare(bData.prefix);
+      }
+
+      // Then sort by year
+      if (aData.year !== bData.year) {
+        return aData.year - bData.year;
+      }
+
+      // Finally sort by number (ascending)
+      return aData.number - bData.number;
+    });
+
+    return sorted;
+  }
+
+  // Get all available items for dropdown (filtered to exclude items already in table)
   getAllSuggestions = () => {
     const dataToSearch = this.props.data || [];
     
-    return dataToSearch.map(item => ({
+    // Get list of inventory numbers already present in the current table rows
+    const existingInventoryNos = this.state.tableRows
+      .map(row => row.ecssInventoryNo?.trim())
+      .filter(inventoryNo => inventoryNo && inventoryNo !== '');
+    
+    // Filter out items that are already present in the table
+    const filteredData = dataToSearch.filter(item => {
+      const assetTag = item._assetsIdTag || item.getAssetsIdTag?.() || '';
+      return !existingInventoryNos.includes(assetTag);
+    });
+    
+    const suggestions = filteredData.map(item => ({
       value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
       label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
       item: item
-    }))
+    }));
+
+    // Sort suggestions by asset number in ascending order
+    return this.sortSuggestionsByAssetNumber(suggestions);
   }
 
   getSearchSuggestions = (searchValue) => {
     // Use props data if available, otherwise return empty array
     const dataToSearch = this.props.data || [];
     
-    // If no search value, return all items
+    // Get list of inventory numbers already present in the current table rows
+    const existingInventoryNos = this.state.tableRows
+      .map(row => row.ecssInventoryNo?.trim())
+      .filter(inventoryNo => inventoryNo && inventoryNo !== '');
+    
+    // Filter out items that are already present in the table
+    const availableData = dataToSearch.filter(item => {
+      const assetTag = item._assetsIdTag || item.getAssetsIdTag?.() || '';
+      return !existingInventoryNos.includes(assetTag);
+    });
+    
+    // If no search value, return all available items sorted
     if (!searchValue.trim()) {
-      return dataToSearch.map(item => ({
+      const allSuggestions = availableData.map(item => ({
         value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
         label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
         item: item
-      })); // Limit to 10 suggestions
+      }));
+      return this.sortSuggestionsByAssetNumber(allSuggestions);
     }
     
     const searchTerm = searchValue.toLowerCase();
     
-    return dataToSearch
+    const filteredSuggestions = availableData
       .filter(item => {
         const assetTag = (item._assetsIdTag || item.getAssetsIdTag?.() || '').toLowerCase();
         const serialNumber = (item._serialNumber || item.getSerialNumber?.() || '').toLowerCase();
@@ -1664,36 +1799,123 @@ class CheckinCheckoutFormComponent extends Component {
         value: item._assetsIdTag || item.getAssetsIdTag?.() || '',
         label: `${item._assetsIdTag || item.getAssetsIdTag?.() || ''} - ${item._brand || item.getBrand?.() || ''} ${item._model || item.getModel?.() || ''}`,
         item: item
-      })); // Limit to 10 suggestions
+      }));
+    
+    return this.sortSuggestionsByAssetNumber(filteredSuggestions);
+  }
+
+  // Calculate dropdown position relative to input
+  getDropdownStyle = () => {
+    if (!this.employeeInputRef.current) {
+      return {};
+    }
+    
+    const inputRect = this.employeeInputRef.current.getBoundingClientRect();
+    
+    return {
+      top: inputRect.bottom + 2, // Position just below the input
+      left: inputRect.left,
+      width: inputRect.width, // Make dropdown exactly the same width as textbox
+      minWidth: inputRect.width
+    };
+  }
+
+  // Calculate employee dropdown position with modal constraints
+  getEmployeeDropdownStyle = () => {
+    if (!this.employeeInputRef.current) {
+      return {};
+    }
+    
+    const inputRect = this.employeeInputRef.current.getBoundingClientRect();
+    const modalRect = document.querySelector('.modal-content')?.getBoundingClientRect();
+    
+    if (!modalRect) {
+      return {
+        top: inputRect.bottom + 2,
+        left: inputRect.left,
+        width: Math.max(inputRect.width, 300),
+      };
+    }
+    
+    // Calculate available space below input within modal
+    const availableHeight = modalRect.bottom - inputRect.bottom - 20; // 20px margin from modal bottom
+    const maxHeight = Math.min(300, availableHeight); // Default 300px max, but constrained by modal
+    
+    return {
+      position: 'fixed',
+      top: inputRect.bottom + 2,
+      left: inputRect.left,
+      width: Math.max(inputRect.width, 300),
+      maxHeight: `${maxHeight}px`,
+      '--dropdown-top': `${inputRect.bottom + 2}px`
+    };
+  }
+
+  // Calculate inventory dropdown position with modal constraints
+  getInventoryDropdownStyle = (rowIndex) => {
+    const inputRef = this.inventoryInputRefs[rowIndex];
+    if (!inputRef) {
+      return {};
+    }
+    
+    const inputRect = inputRef.getBoundingClientRect();
+    const modalRect = document.querySelector('.modal-content')?.getBoundingClientRect();
+    
+    if (!modalRect) {
+      return {
+        top: inputRect.bottom + 2,
+        left: inputRect.left,
+        width: Math.max(inputRect.width, 300),
+      };
+    }
+    
+    // Calculate available space below input within modal
+    const availableHeight = modalRect.bottom - inputRect.bottom - 20; // 20px margin from modal bottom
+    const maxHeight = Math.min(350, availableHeight); // Default 350px max, but constrained by modal
+    
+    return {
+      position: 'fixed',
+      top: inputRect.bottom + 2,
+      left: inputRect.left,
+      width: Math.max(inputRect.width, 300),
+      maxHeight: `${maxHeight}px`,
+      '--dropdown-top': `${inputRect.bottom + 2}px`
+    };
   }
 
   // Handle employee code input change
   handleEmployeeCodeChange = (value) => {
-    console.log('handleEmployeeCodeChange called with value:', value);
-    console.log('Current employees array:', this.state.employees);
+    console.log('Employee search changed:', value);
     
+    // Always show dropdown when typing, regardless of content
     this.setState({ 
       employeeSearchTerm: value,
-      showEmployeeDropdown: value.length > 0,
+      showEmployeeDropdown: true, // Always show dropdown when typing
+      showAllEmployees: false, // Reset show all flag when typing
       employeeDetails: {
         ...this.state.employeeDetails,
         employeeId: value
       }
     });
 
-    // If user clears the field, clear all other fields
+    // If user clears the field, also clear all other fields
     if (!value.trim()) {
-      this.setState({
+      this.setState(prevState => ({
+        ...prevState,
         employeeDetails: {
-          ...this.state.employeeDetails,
+          ...prevState.employeeDetails,
           name: '',
           employeeId: '',
           department: '',
           email: '',
           mobileNo: ''
-        },
-        showEmployeeDropdown: false
-      });
+        }
+      }));
+    }
+
+    // Ensure employees are loaded for filtering
+    if (this.state.employees.length === 0) {
+      this.fetchAllEmployees();
     }
   }
 
@@ -1711,6 +1933,7 @@ class CheckinCheckoutFormComponent extends Component {
         department: employee.department || ''
       },
       showEmployeeDropdown: false,
+      showAllEmployees: false, // Reset show all flag
       employeeSearchTerm: employee.employeeId
     });
 
@@ -1720,29 +1943,42 @@ class CheckinCheckoutFormComponent extends Component {
     }, 100);
   }
 
-  // Get filtered employees for dropdown
-  getFilteredEmployees = () => {
-    const { employees, employeeSearchTerm } = this.state;
+  // Get filtered employees for dropdown (sorted by employee ID in ascending order)
+  getEmployeeSearchResults = () => {
+    const { employees, employeeSearchTerm, showAllEmployees } = this.state;
     
-    console.log('getFilteredEmployees called with:', {
+    console.log('Getting employee search results:', {
       employeesCount: employees.length,
       searchTerm: employeeSearchTerm,
-      employees: employees
+      showDropdown: this.state.showEmployeeDropdown,
+      showAllEmployees: showAllEmployees
     });
     
-    if (!employeeSearchTerm.trim()) {
-      console.log('No search term, returning first 10 employees:', employees.slice(0, 10));
-      return employees.slice(0, 10); // Show first 10 employees when no search term
+    let filteredEmployees;
+    
+    // Show all employees when clicked or when no search term
+    if (showAllEmployees || !employeeSearchTerm || !employeeSearchTerm.trim()) {
+      console.log('No search term or showing all - returning all employees:', employees.length);
+      filteredEmployees = employees; // Show ALL employees when no search term or when clicked
+    } else {
+      const searchTerm = employeeSearchTerm.toLowerCase();
+      console.log('Search term for employees:', searchTerm);
+      filteredEmployees = employees.filter(employee => 
+        employee.employeeId.toLowerCase().includes(searchTerm) ||
+        employee.name.toLowerCase().includes(searchTerm)
+      );
+      console.log('Filtered employees:', filteredEmployees.length);
     }
     
-    const searchTerm = employeeSearchTerm.toLowerCase();
-    const filtered = employees.filter(employee => 
-      employee.employeeId.toLowerCase().includes(searchTerm) ||
-      employee.name.toLowerCase().includes(searchTerm)
-    ).slice(0, 10); // Limit to 10 results
+    // Sort employees by employee ID in ascending order
+    const sortedEmployees = filteredEmployees.sort((a, b) => {
+      // Convert employee IDs to strings and compare
+      const aId = String(a.employeeId || '');
+      const bId = String(b.employeeId || '');
+      return aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
+    });
     
-    console.log('Filtered employees:', filtered);
-    return filtered;
+    return sortedEmployees;
   }
 }
 

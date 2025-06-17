@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import axios from 'axios'
-import './EquipmentInventoryForm.css'
+import '../css/EquipmentInventoryForm.css'
+import '../css/ModalComponents.css'
 
  const baseURL = `${window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
   ? "http://localhost:3001" 
@@ -19,7 +20,7 @@ class InventoryDetailsFormComponent extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isVisible: false,
+      isVisible: props.isVisible || false,
       activeTab: 'new', // 'new' or 'existing'
       sampleFormTab: 1, // For sample form tab navigation (1-6)
       editMode: false, // Whether we're editing an existing item
@@ -61,12 +62,42 @@ class InventoryDetailsFormComponent extends Component {
       selectedSerialNumber: '',
       filteredSerialNumbers: [],
       showDropdown: false,
+      showAllOptions: false, // Flag to show all options on click
+      activeInputRef: null, // Track which input is active for dropdown positioning
       selectedExistingItem: null,
       isSubmitting: false,
       isLoadingItems: false,
       errors: {},
       successMessage: ''
     };
+    
+    // Ref for dropdown positioning
+    this.serialNumberInputRef = React.createRef();
+  }
+
+  componentDidMount() {
+    // Handle initial visibility state
+    if (this.props.isVisible) {
+      this.setState({ isVisible: true });
+      this.resetForm();
+      this.loadExistingItems();
+    }
+    
+    // Add click listener to hide dropdown when clicking outside
+    document.addEventListener('click', this.handleDocumentClick);
+  }
+
+  componentWillUnmount() {
+    // Remove click listener
+    document.removeEventListener('click', this.handleDocumentClick);
+  }
+
+  handleDocumentClick = (event) => {
+    // Check if click is outside dropdown and input
+    if (!event.target.closest('.combo-box-wrapper') && 
+        !event.target.closest('.serial-number-dropdown-external')) {
+      this.setState({ showDropdown: false });
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -123,6 +154,7 @@ class InventoryDetailsFormComponent extends Component {
       selectedSerialNumber: '',
       filteredSerialNumbers: [],
       showDropdown: false,
+      showAllOptions: false, // Reset show all options flag
       errors: {},
       successMessage: '',
       isSubmitting: false
@@ -164,16 +196,17 @@ class InventoryDetailsFormComponent extends Component {
     const inputValue = e.target.value;
     this.setState({
       selectedSerialNumber: inputValue,
-      selectedExistingItem: null
+      selectedExistingItem: null,
+      showAllOptions: false // Reset show all flag when typing
     });
   
     // Filter items based on input
     const { existingItems } = this.state;
-    const allItems = existingItems.map(item => ({
-      serialNumber: item['Serial Number'] || item._serialNumber || item.serialNumber || '',
+    const allItems = existingItems.map((item, index) => ({
+      serialNumber: item['Serial Number'] || item._serialNumber || item.serialNumber || `No-Serial-${index}`,
       assetsIdTag: item['Assets ID Tag'] || item._assetsIdTag || item.assetsIdTag || 'No Tag',
       fullItem: item
-    })).filter(item => item.serialNumber !== '');
+    })); // Include ALL items, not just those with serial numbers
   
     if (inputValue === '') {
       this.setState({
@@ -184,7 +217,10 @@ class InventoryDetailsFormComponent extends Component {
     } else {
       const filtered = allItems.filter(item =>
         item.serialNumber.toLowerCase().includes(inputValue.toLowerCase()) ||
-        item.assetsIdTag.toLowerCase().includes(inputValue.toLowerCase())
+        item.assetsIdTag.toLowerCase().includes(inputValue.toLowerCase()) ||
+        // Also search by brand and model for better filtering
+        (item.fullItem.Brand || item.fullItem._brand || '').toLowerCase().includes(inputValue.toLowerCase()) ||
+        (item.fullItem.Model || item.fullItem._model || '').toLowerCase().includes(inputValue.toLowerCase())
       );
       this.setState({
         filteredSerialNumbers: filtered,
@@ -518,18 +554,18 @@ class InventoryDetailsFormComponent extends Component {
       console.log('Warranty start date - Raw:', rawWarrantyStartDate, 'Converted:', warrantyStartDate);
       console.log('Warranty end date:', warrantyEndDate);
   
-      console.log('=== UPDATING STATE ===');
-      this.setState({
-        selectedSerialNumber: serialNumber,
-        showDropdown: false,
-        filteredItems: [selectedItem],
-        selectedExistingItem: null,
-        formData: formData,
-        warrantyInfo: warrantyInfo,
-        warrantyStartDate: warrantyStartDate,
-        calculatedWarrantyEndDate: warrantyEndDate,
-        editMode: true,
-        selectedItemId: selectedItem._id || selectedItem.id
+      console.log('=== UPDATING STATE ===');    this.setState({
+      selectedSerialNumber: serialNumber,
+      showDropdown: false,
+      showAllOptions: false, // Reset show all flag
+      filteredItems: [selectedItem],
+      selectedExistingItem: null,
+      formData: formData,
+      warrantyInfo: warrantyInfo,
+      warrantyStartDate: warrantyStartDate,
+      calculatedWarrantyEndDate: warrantyEndDate,
+      editMode: true,
+      selectedItemId: selectedItem._id || selectedItem.id
       }, () => {
         console.log('State updated successfully');
         console.log('New state formData:', this.state.formData);
@@ -542,6 +578,7 @@ class InventoryDetailsFormComponent extends Component {
       this.setState({
         selectedSerialNumber: serialNumber,
         showDropdown: false,
+        showAllOptions: false, // Reset show all flag
         filteredItems: [],
         selectedExistingItem: null,
         editMode: false,
@@ -629,7 +666,16 @@ class InventoryDetailsFormComponent extends Component {
   }
 
   renderExistingItems = () => {
-    const { filteredItems, selectedExistingItem, selectedSerialNumber, existingItems, isLoadingItems, filteredSerialNumbers, showDropdown } = this.state;
+    const { filteredItems, selectedExistingItem, selectedSerialNumber, existingItems, isLoadingItems, filteredSerialNumbers, showDropdown, showAllOptions } = this.state;
+    
+    // Determine which items to show in dropdown
+    const dropdownItems = showAllOptions ? 
+      existingItems.map(item => ({
+        serialNumber: item['Serial Number'] || item._serialNumber || item.serialNumber || '',
+        assetsIdTag: item['Assets ID Tag'] || item._assetsIdTag || item.assetsIdTag || 'No Tag',
+        fullItem: item
+      })).filter(item => item.serialNumber !== '') : 
+      filteredSerialNumbers;
     
     return (
       <div className="existing-items-container">
@@ -640,75 +686,18 @@ class InventoryDetailsFormComponent extends Component {
             <label htmlFor="serialNumberCombo">Select by Serial Number or Assets Tag</label>
             <div className="combo-box-wrapper" style={{ position: 'relative' }}>
               <input
+                ref={this.serialNumberInputRef}
                 type="text"
                 id="serialNumberCombo"
                 value={selectedSerialNumber}
                 onChange={this.handleComboInput}
                 onFocus={this.showDropdown}
+                onClick={this.showDropdown}
                 onBlur={this.hideDropdown}
                 className="form-control"
                 placeholder="Type serial number or assets tag..."
                 autoComplete="off"
               />
-              {showDropdown && (
-                <div className="dropdown-list" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  maxHeight: '300px',
-                  overflowY: 'auto',
-                  zIndex: 1000,
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
-                }}>
-                  {filteredSerialNumbers.length > 0 ? (
-                    filteredSerialNumbers.map((item, index) => (
-                      <div
-                        key={index}
-                        className="dropdown-item"
-                        onMouseDown={() => this.selectSerialNumber(item)}
-                        style={{
-                          padding: '12px 16px',
-                          cursor: 'pointer',
-                          borderBottom: '1px solid #eee',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '4px'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
-                      >
-                        <div style={{
-                          fontWeight: '600',
-                          color: '#333',
-                          fontSize: '14px'
-                        }}>
-                          📟 {item.serialNumber}
-                        </div>
-                        <div style={{
-                          fontSize: '12px',
-                          color: '#666',
-                          fontStyle: item.assetsIdTag === 'No Tag' ? 'italic' : 'normal'
-                        }}>
-                          🏷️ {item.assetsIdTag}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ 
-                      padding: '12px 16px', 
-                      color: '#999',
-                      textAlign: 'center',
-                      fontStyle: 'italic'
-                    }}>
-                      No items found matching your search
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
             <small style={{ color: '#666', fontSize: '12px', marginTop: '4px', display: 'block' }}>
               💡 You can search by either serial number or assets tag
@@ -761,14 +750,125 @@ class InventoryDetailsFormComponent extends Component {
       </div>
     );
   }
-  
-  // ...existing code...
+
+
+  // Show dropdown
+  showDropdown = () => {
+    console.log('showDropdown called!');
+    // Ensure we have items to show in dropdown
+    const { existingItems, filteredSerialNumbers } = this.state;
+    console.log('Existing items count:', existingItems.length);
+    console.log('Filtered serial numbers count:', filteredSerialNumbers.length);
+    
+    // Get all available items for dropdown - INCLUDE ALL ITEMS, even without serial numbers
+    const allItems = existingItems.map((item, index) => ({
+      serialNumber: item['Serial Number'] || item._serialNumber || item.serialNumber || `No-Serial-${index}`,
+      assetsIdTag: item['Assets ID Tag'] || item._assetsIdTag || item.assetsIdTag || 'No Tag',
+      fullItem: item
+    })); // Remove the filter that was excluding items without serial numbers
+    
+    console.log('All items mapped count (including items without serial numbers):', allItems.length);
+    console.log('Sample of all items:', allItems.slice(0, 5));
+    console.log('Items with actual serial numbers:', allItems.filter(item => !item.serialNumber.startsWith('No-Serial-')).length);
+    console.log('Items without serial numbers:', allItems.filter(item => item.serialNumber.startsWith('No-Serial-')).length);
+    
+    this.setState({ 
+      showDropdown: true,
+      showAllOptions: true, // Set flag to show all options
+      filteredSerialNumbers: allItems
+    }, () => {
+      console.log('Dropdown state updated - showDropdown:', this.state.showDropdown);
+      console.log('Updated filteredSerialNumbers count:', this.state.filteredSerialNumbers.length);
+      console.log('showAllOptions:', this.state.showAllOptions);
+    });
+  }
+
+  // Handle clicks on auto-populated fields
+  handleAutoPopulatedFieldClick = (event) => {
+    console.log('Auto-populated field clicked!');
+    console.log('Existing items count:', this.state.existingItems.length);
+    console.log('Filtered serial numbers count:', this.state.filteredSerialNumbers.length);
+    
+    // Set the active input reference for dropdown positioning
+    this.setState({ activeInputRef: event.target });
+    
+    // If we don't have existing items loaded, load them first
+    if (this.state.existingItems.length === 0) {
+      console.log('No existing items, loading them first...');
+      this.loadExistingItems().then(() => {
+        this.showDropdown();
+      });
+    } else {
+      this.showDropdown();
+    }
+  }
+
+  // Handle focus on auto-populated fields
+  handleAutoPopulatedFieldFocus = (event) => {
+    console.log('Auto-populated field focused!');
+    console.log('Existing items count:', this.state.existingItems.length);
+    console.log('Filtered serial numbers count:', this.state.filteredSerialNumbers.length);
+    
+    // Set the active input reference for dropdown positioning
+    this.setState({ activeInputRef: event.target });
+    
+    // If we don't have existing items loaded, load them first
+    if (this.state.existingItems.length === 0) {
+      console.log('No existing items, loading them first...');
+      this.loadExistingItems().then(() => {
+        this.showDropdown();
+      });
+    } else {
+      this.showDropdown();
+    }
+  }
 
   // Hide dropdown
   hideDropdown = () => {
     setTimeout(() => {
-      this.setState({ showDropdown: false });
+      this.setState({ 
+        showDropdown: false,
+        showAllOptions: false // Reset show all flag
+      });
     }, 200); // Delay to allow click events on dropdown items
+  }
+
+  // Calculate dropdown position for external rendering
+  getDropdownStyle = () => {
+    // Use either the search input ref or the active input ref
+    const activeElement = this.state.activeInputRef || this.serialNumberInputRef.current;
+    
+    if (!activeElement) {
+      return {
+        display: 'none'
+      };
+    }
+    
+    const inputRect = activeElement.getBoundingClientRect();
+    const modalRect = document.querySelector('.inventory-details-modal')?.getBoundingClientRect();
+    
+    if (!modalRect) {
+      return {
+        position: 'fixed',
+        top: inputRect.bottom + 2,
+        left: inputRect.left,
+        width: Math.max(inputRect.width, 300),
+        zIndex: 10000
+      };
+    }
+    
+    // Calculate available space below input within modal
+    const availableHeight = modalRect.bottom - inputRect.bottom - 20; // 20px margin from modal bottom
+    const maxHeight = Math.min(350, availableHeight); // Default 350px max, but constrained by modal
+    
+    return {
+      position: 'fixed',
+      top: inputRect.bottom + 2,
+      left: inputRect.left,
+      width: Math.max(inputRect.width, 300),
+      maxHeight: `${maxHeight}px`,
+      zIndex: 10000
+    };
   }
 
   // Handle existing item selection
@@ -1459,7 +1559,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.itemType}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder='e.g., Laptop, Monitor, Printer'
                   />
                 </div>
@@ -1471,7 +1570,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.brand}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder='e.g., Dell, HP, Apple'
                   />
                 </div>
@@ -1483,7 +1581,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.model}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder='e.g., XPS 13, EliteBook 840, MacBook Pro'
                   />
                 </div>
@@ -1495,7 +1592,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.serialNumber}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder='e.g., ABC123456789'
                   />
                 </div>
@@ -1516,7 +1612,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.purchaseDate}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="dd/mm/yyyy"
                   />
                 </div>
@@ -1528,7 +1623,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.purchasePrice}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     step="0.01"
                     placeholder='e.g., 0.00'
                   />
@@ -1541,7 +1635,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.date}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="dd/mm/yyyy"
                   />
                 </div>
@@ -1553,7 +1646,6 @@ class InventoryDetailsFormComponent extends Component {
                     className="vertical-input auto-populated" 
                     value={this.state.formData.time}
                     onChange={this.handleInputChange}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., 1430 hrs"
                   />
                 </div>
@@ -1589,10 +1681,9 @@ class InventoryDetailsFormComponent extends Component {
                   <label><strong>Warranty End Date:</strong></label>
                   <input 
                     type="date" 
-                    className="vertical-input auto-populated" 
+                    className="vertical-input" 
                     value={this.state.calculatedWarrantyEndDate || ''}
                     onChange={(e) => this.setState({ calculatedWarrantyEndDate: e.target.value })}
-                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="dd/mm/yyyy - Will auto-calculate when you enter warranty info and start date"
                   />
                 </div>
@@ -1620,9 +1711,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="date" 
                     name="checkOutDate"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.checkOutDate}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                   />
                 </div>
                 <div className="form-field">
@@ -1630,9 +1722,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="assignedUser"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.assignedUser}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., Moses Lee" 
                   />
                 </div>
@@ -1641,9 +1734,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="location"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.location}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., Office Building A, Room 201" 
                   />
                 </div>
@@ -1652,9 +1746,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="assetsIdTag"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.assetsIdTag}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., CE/ECSS/078/2025" 
                   />
                 </div>
@@ -1672,9 +1767,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="status"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.status}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., Working" 
                   />
                 </div>
@@ -1683,9 +1779,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="osType"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.osType}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., Windows" 
                   />
                 </div>
@@ -1694,9 +1791,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="osVersion"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.osVersion}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., macOS Sequoia 15.5" 
                   />
                 </div>
@@ -1705,9 +1803,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="ipAddressIPv4"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.ipAddressIPv4}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., 192.168.1.180" 
                   />
                 </div>
@@ -1716,9 +1815,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="ipAddressIPv6"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.ipAddressIPv6}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., fe80::8ef:387d:c1c2:9054" 
                   />
                 </div>
@@ -1727,9 +1827,10 @@ class InventoryDetailsFormComponent extends Component {
                   <input 
                     type="text" 
                     name="macAddress"
-                    className="vertical-input" 
+                    className="vertical-input auto-populated" 
                     value={this.state.formData.macAddress}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., ac:07:75:25:b9:74" 
                   />
                 </div>
@@ -1746,9 +1847,10 @@ class InventoryDetailsFormComponent extends Component {
                   <label><strong>Notes:</strong></label>
                   <textarea 
                     name="notes"
-                    className="vertical-textarea" 
+                    className="vertical-textarea auto-populated" 
                     value={this.state.formData.notes}
                     onChange={this.handleInputChange}
+                    style={{backgroundColor: '#f0f8ff', border: '2px solid #4CAF50'}}
                     placeholder="e.g., Laptop + Charger" 
                     rows="3"
                   ></textarea>
@@ -1893,6 +1995,139 @@ class InventoryDetailsFormComponent extends Component {
             )}
           </div>
         </div>
+        
+        {/* External dropdown rendered outside modal for maximum visibility */}
+        {this.state.showDropdown && (
+          <div 
+            className="serial-number-dropdown-external"
+            style={{
+              ...this.getDropdownStyle(),
+              backgroundColor: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              maxHeight: '400px', // Increased max height to show more items
+              overflowY: 'auto',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+              zIndex: 10001 // Ensure it's above other elements
+            }}
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            {(() => {
+              // Determine which items to show - INCLUDE ALL ITEMS
+              let itemsToShow = this.state.showAllOptions ? 
+                this.state.existingItems.map((item, index) => ({
+                  serialNumber: item['Serial Number'] || item._serialNumber || item.serialNumber || `No-Serial-${index + 1}`,
+                  assetsIdTag: item['Assets ID Tag'] || item._assetsIdTag || item.assetsIdTag || 'No Tag',
+                  fullItem: item
+                })) : // Don't filter out items without serial numbers when showing all
+                this.state.filteredSerialNumbers;
+
+              // Sort items by running number and year (e.g., CE/001/2024, CE/002/2024, etc.)
+              itemsToShow = itemsToShow.sort((a, b) => {
+                const getAssetInfo = (assetTag) => {
+                  // Extract running number and year from formats like "CE/001/2024" or "ECSS/001/2024"
+                  const match = assetTag.match(/^(CE|ECSS)\/(\d+)\/(\d{4})$/);
+                  if (match) {
+                    const [, prefix, number, year] = match;
+                    return {
+                      prefix,
+                      number: parseInt(number, 10),
+                      year: parseInt(year, 10),
+                      isValid: true,
+                      fullTag: assetTag
+                    };
+                  }
+                  // For non-standard formats, put them at the end
+                  return {
+                    prefix: 'ZZZ', // Put at end alphabetically
+                    number: 999999,
+                    year: 9999,
+                    isValid: false,
+                    fullTag: assetTag
+                  };
+                };
+
+                const aInfo = getAssetInfo(a.assetsIdTag);
+                const bInfo = getAssetInfo(b.assetsIdTag);
+
+                // First sort by prefix (CE vs ECSS)
+                if (aInfo.prefix !== bInfo.prefix) {
+                  return aInfo.prefix.localeCompare(bInfo.prefix);
+                }
+
+                // Then sort by year (ascending - older years first)
+                if (aInfo.year !== bInfo.year) {
+                  return aInfo.year - bInfo.year;
+                }
+
+                // Finally sort by running number (ascending - lower numbers first)
+                return aInfo.number - bInfo.number;
+              });
+                
+              console.log('Items to show in dropdown:', itemsToShow.length);
+              console.log('showAllOptions flag:', this.state.showAllOptions);
+              console.log('First 3 sorted items:', itemsToShow.slice(0, 3).map(item => item.assetsIdTag));
+              console.log('Last 3 sorted items:', itemsToShow.slice(-3).map(item => item.assetsIdTag));
+              
+              return itemsToShow.map((item, index) => (
+                <div
+                  key={`${item.serialNumber}-${index}`}
+                  className="dropdown-item-external"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    this.selectSerialNumber(item);
+                  }}
+                  onClick={() => this.selectSerialNumber(item)}
+                  style={{
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #eee',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                >
+                  <div style={{
+                    fontWeight: '600',
+                    color: '#333',
+                    fontSize: '14px'
+                  }}>
+                    📟 {item.serialNumber.startsWith('No-Serial-') ? "": item.serialNumber}
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: '#666',
+                    fontStyle: item.assetsIdTag === 'No Tag' ? 'italic' : 'normal'
+                  }}>
+                    🏷️ {item.assetsIdTag}
+                  </div>
+                  {/* Show brand and model for better identification */}
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#888'
+                  }}>
+                    📦 {(item.fullItem.Brand || item.fullItem._brand || 'Unknown Brand')} - {(item.fullItem.Model || item.fullItem._model || 'Unknown Model')}
+                  </div>
+                </div>
+              ));
+            })()}
+            {/* Debug info at bottom of dropdown */}
+            <div style={{
+              padding: '8px 16px',
+              backgroundColor: '#f0f0f0',
+              fontSize: '12px',
+              color: '#666',
+              borderTop: '1px solid #ddd'
+            }}>
+              📊 Showing {this.state.showAllOptions ? 
+                this.state.existingItems.length : 
+                this.state.filteredSerialNumbers.length
+              } of {this.state.existingItems.length} total items
+            </div>
+          </div>
+        )}
       </div>
     );
   }

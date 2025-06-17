@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import '../css/FilterSearchComponent.css';
 
 class FilterSearchComponent extends Component {
   constructor(props) {
@@ -12,7 +13,8 @@ class FilterSearchComponent extends Component {
       warrantyStatus: '',
       selectedStatus: '',
       showWarrantyDropdown: false,
-      showStatusDropdown: false
+      showStatusDropdown: false,
+      showAllOptions: false // Flag to control showing all options on click
     };
   }
 
@@ -41,6 +43,18 @@ class FilterSearchComponent extends Component {
       .filter(value => value && value.toString().trim() !== '')
       .map(value => value.toString().trim());
     return [...new Set(values)].sort();
+  };
+
+  // Get unique warranty statuses from actual data
+  getUniqueWarrantyStatuses = (data) => {
+    if (!data || data.length === 0) return [];
+    
+    const warrantyStatuses = data
+      .filter(item => item != null)
+      .map(item => this.calculateWarrantyStatus(item._warrantyStartDate, item._warrantyEndDate))
+      .filter(status => status && status.trim() !== '');
+    
+    return [...new Set(warrantyStatuses)].sort();
   };
 
   // Helper function to calculate warranty status
@@ -184,11 +198,11 @@ class FilterSearchComponent extends Component {
       });
     }
 
-    // Apply status filter
+    // Apply status filter - use exact match to avoid "Working" matching "Not Working"
     if (selectedStatus.trim() !== '') {
       const statusLower = selectedStatus.toLowerCase().trim();
       filteredData = filteredData.filter(item => 
-        item._status && item._status.toString().toLowerCase().includes(statusLower)
+        item._status && item._status.toString().toLowerCase().trim() === statusLower
       );
     }
 
@@ -207,7 +221,8 @@ class FilterSearchComponent extends Component {
   handleWarrantyStatusChange = (event) => {
     this.setState({ 
       warrantyStatusInput: event.target.value,
-      showWarrantyDropdown: true // Always show dropdown when typing
+      showWarrantyDropdown: true, // Always show dropdown when typing
+      showAllOptions: false // Reset show all flag when typing
     });
   };
 
@@ -215,7 +230,8 @@ class FilterSearchComponent extends Component {
   handleStatusChange = (event) => {
     this.setState({ 
       selectedStatusInput: event.target.value,
-      showStatusDropdown: true // Always show dropdown when typing
+      showStatusDropdown: true, // Always show dropdown when typing
+      showAllOptions: false // Reset show all flag when typing
     });
   };
 
@@ -233,10 +249,12 @@ class FilterSearchComponent extends Component {
       stateUpdate.warrantyStatusInput = value;
       stateUpdate.warrantyStatus = value;
       stateUpdate.showWarrantyDropdown = false;
+      stateUpdate.showAllOptions = false;
     } else if (filterType === 'selectedStatus') {
       stateUpdate.selectedStatusInput = value;
       stateUpdate.selectedStatus = value;
       stateUpdate.showStatusDropdown = false;
+      stateUpdate.showAllOptions = false;
     }
     
     this.setState(stateUpdate);
@@ -247,16 +265,29 @@ class FilterSearchComponent extends Component {
     this.setState({ [dropdownType]: true });
   };
 
+  // Handle click events to show all dropdown options
+  handleInputClick = (dropdownType) => {
+    this.setState({ 
+      [dropdownType]: true,
+      showAllOptions: true // Flag to indicate we want to show all options
+    });
+  };
+
   // Handle blur events to hide dropdowns (optimized for responsiveness)
   handleInputBlur = (dropdownType) => {
     setTimeout(() => {
-      this.setState({ [dropdownType]: false });
+      this.setState({ 
+        [dropdownType]: false,
+        showAllOptions: false // Reset show all flag on blur
+      });
     }, 100);
   };
 
   // Optimized suggestion filtering for better performance
-  getFilteredSuggestions = (suggestions, currentValue) => {
-    if (!currentValue || currentValue.trim() === '') return suggestions; // Show all suggestions when empty
+  getFilteredSuggestions = (suggestions, currentValue, showAll = false) => {
+    // If showAll is true or input is empty, return all suggestions
+    if (showAll || !currentValue || currentValue.trim() === '') return suggestions;
+    
     const searchTerm = currentValue.toLowerCase().trim();
     const filtered = suggestions.filter(suggestion => 
       suggestion.toLowerCase().includes(searchTerm)
@@ -273,7 +304,8 @@ class FilterSearchComponent extends Component {
       warrantyStatus: '',
       selectedStatus: '',
       showWarrantyDropdown: false,
-      showStatusDropdown: false
+      showStatusDropdown: false,
+      showAllOptions: false
     });
   };
 
@@ -292,12 +324,17 @@ class FilterSearchComponent extends Component {
     // Get unique values for dropdowns
     const statuses = this.getUniqueValues(data, '_status');
     
-    // Warranty status suggestions (removed "Unknown")
-    const warrantyStatusSuggestions = ['Active', 'Expired', 'Expiring Soon'];
+    // Calculate warranty status suggestions from actual data
+    const warrantyStatusSuggestions = this.getUniqueWarrantyStatuses(data);
     
     // Get filtered suggestions for each combobox
-    const filteredWarrantySuggestions = this.getFilteredSuggestions(warrantyStatusSuggestions, warrantyStatusInput);
-    const filteredStatusSuggestions = this.getFilteredSuggestions(statuses, selectedStatusInput);
+    const filteredWarrantySuggestions = this.state.showAllOptions && showWarrantyDropdown ? 
+      warrantyStatusSuggestions : 
+      this.getFilteredSuggestions(warrantyStatusSuggestions, warrantyStatusInput);
+      
+    const filteredStatusSuggestions = this.state.showAllOptions && showStatusDropdown ? 
+      statuses : 
+      this.getFilteredSuggestions(statuses, selectedStatusInput);
 
     // Count active filters
     const activeFilterCount = [warrantyStatus, selectedStatus].filter(filter => filter !== '').length;
@@ -317,6 +354,7 @@ class FilterSearchComponent extends Component {
                 value={warrantyStatusInput}
                 onChange={this.handleWarrantyStatusChange}
                 onFocus={() => this.handleInputFocus('showWarrantyDropdown')}
+                onClick={() => this.handleInputClick('showWarrantyDropdown')}
                 onBlur={() => this.handleInputBlur('showWarrantyDropdown')}
                 className="filter-select-inline combobox-input"
                 disabled={isLoading}
@@ -348,6 +386,7 @@ class FilterSearchComponent extends Component {
                 value={selectedStatusInput}
                 onChange={this.handleStatusChange}
                 onFocus={() => this.handleInputFocus('showStatusDropdown')}
+                onClick={() => this.handleInputClick('showStatusDropdown')}
                 onBlur={() => this.handleInputBlur('showStatusDropdown')}
                 className="filter-select-inline combobox-input"
                 disabled={isLoading}

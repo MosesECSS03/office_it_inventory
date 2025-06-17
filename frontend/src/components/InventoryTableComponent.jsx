@@ -4,7 +4,7 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import TabNavigationComponent from './TabNavigationComponent';
-import './InventoryTableComponent.css';
+import '../css/InventoryTableComponent.css';
 
 ModuleRegistry.registerModules([ AllCommunityModule ]);
 
@@ -1337,6 +1337,7 @@ class InventoryTableComponent extends Component {
           activeTab={activeTab}
           onTabChange={this.handleTabChange}
           onExportData={this.handleExportData}
+          onOpenExportModal={this.props.onOpenExportModal}
         />
         <div className="ag-theme-alpine-custom table-wrapper">
           <AgGridReact

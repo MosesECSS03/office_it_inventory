@@ -1,0 +1,432 @@
+/* Generic Modal Styles for Form Components */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85); /* Increased opacity for better contrast */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px); /* Increased blur for better separation */
+}
+
+.modal-content {
+  background: #ffffff; /* Solid white background for maximum contrast */
+  border: 2px solid #e0e0e0;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4); /* Stronger shadow */
+  width: 90vw !important;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: visible;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.checkin-checkout-modal {
+  width: 500px;
+}
+
+.inventory-details-modal {
+  width: 700px;
+}
+
+/* Inventory Details Modal Font Visibility Fixes */
+.inventory-details-modal .modal-body {
+  color: #1a1a1a !important; /* Force dark text */
+  background: #ffffff !important; /* Force white background */
+}
+
+.inventory-details-modal .page-title,
+.inventory-details-modal h3,
+.inventory-details-modal h4,
+.inventory-details-modal h5,
+.inventory-details-modal p,
+.inventory-details-modal label,
+.inventory-details-modal span {
+  color: #1a1a1a !important; /* Force dark text for all text elements */
+}
+
+.inventory-details-modal .form-control,
+.inventory-details-modal input,
+.inventory-details-modal textarea,
+.inventory-details-modal select {
+  color: #1a1a1a !important; /* Force dark text in form controls */
+  background: #ffffff !important; /* Force white background in form controls */
+}
+
+.inventory-details-modal .dropdown-list,
+.inventory-details-modal .dropdown-item {
+  color: #1a1a1a !important; /* Force dark text in dropdown */
+  background: #ffffff !important; /* Force white background in dropdown */
+}
+
+.inventory-details-modal .existing-item-card {
+  color: #1a1a1a !important; /* Force dark text in item cards */
+  background: #ffffff !important; /* Force white background in item cards */
+}
+
+.inventory-details-modal .tab-button {
+  color: #1a1a1a !important; /* Force dark text in tabs */
+}
+
+.inventory-details-modal .tab-button.active {
+  color: #ffffff !important; /* Keep white text on active tab */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 2rem 1rem 2rem;
+  border-bottom: 2px solid #e0e0e0; /* More prominent border */
+  background: #f8f9fa; /* Light background for header */
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #1a1a1a; /* Much darker text for better contrast */
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #ff0000;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  gap: 1rem;
+  width: 50vw;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600; /* Increased weight for better visibility */
+  color: #1a1a1a; /* Much darker color for better contrast */
+  font-size: 0.95rem; /* Slightly larger for readability */
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #d0d0d0; /* Darker border for better visibility */
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #ffffff; /* Pure white background */
+  color: #1a1a1a; /* Dark text for maximum contrast */
+  font-weight: 500; /* Medium weight for better readability */
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #0056b3; /* Darker blue for better contrast */
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2);
+  background: #ffffff;
+}
+
+.form-control.error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+  background: #fff5f5; /* Light red background for errors */
+}
+
+.error-text {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.success-message {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: #155724;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.success-icon {
+  font-size: 1.2rem;
+}
+
+.error-message {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: #721c24;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-icon {
+  font-size: 1.2rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #6c757d, #545b62);
+  color: white;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #545b62, #383d41);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Progress Bar and Pagination Styles */
+.progress-container {
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #28a745);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.page-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.page-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #666;
+  background: #f8f9fa;
+  color: #333;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.page-indicator.completed {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-color: #28a745;
+  color: white;
+}
+
+.page-indicator.active {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border-color: #007bff;
+  color: white;
+  transform: scale(1.1);
+}
+
+.page-indicator:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-indicator:hover:not(:disabled) {
+  transform: scale(1.05);
+  border-color: #007bff;
+  background: #e3f2fd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.page-info {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Form Page Styles */
+.form-page {
+  min-height: 300px;
+  animation: pageSlideIn 0.3s ease-out;
+}
+
+.page-title {
+  color: #333;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(0, 123, 255, 0.2);
+}
+
+@keyframes pageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Enhanced Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.navigation-buttons {
+  flex: 1;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Table-based Checkin/Checkout Form Styles */
+.checkin-checkout-table-modal {
+  width: 98vw;
+  max-width: 3000px; /* Increased to accommodate 5400px+ table width */
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative; /* Ensure dropdown positioning context */
+  /* Black scrollbar styling for modal */
+  scrollbar-width: thin;
+  scrollbar-color: #000000 #333333;
+}
+
+/* Modal scrollbar styling for webkit browsers */
+.checkin-checkout-table-modal::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.checkin-checkout-table-modal::-webkit-scrollbar-track {
+  background: #333333;
+  border-radius: 7px;
+  border: 1px solid #555555;
+}
+
+.checkin-checkout-table-modal::-webkit-scrollbar-thumb {
+  background: #000000;
+  border-radius: 7px;
+  border: 2px solid #333333;
+  transition: background 0.3s ease;
+}
+
+.checkin-checkout-table-modal::-webkit-scrollbar-thumb:hover {
+  background: #444444;
+}
+
+/* Modal blocking overlay */
+.modal-blocking-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  pointer-events: auto;
+  cursor: not-allowed;
+}

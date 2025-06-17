@@ -19,6 +19,64 @@
       }
     </style>
     <title>Office IT Inventory System</title>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "9b292331-62de-4646-b9fb-c3ca1634ba31",
+          notifyButton: {
+            enable: true,
+          },
+          promptOptions: {
+            slidedown: {
+              prompts: [
+                { type: "push", autoPrompt: true }
+              ]
+            }
+          }
+        });
+
+        if (window.OneSignal) {
+          window.OneSignal.push(() => {
+            // Notification display event (already present)
+            window.OneSignal.on('notificationDisplay', (event) => {
+              console.log('OneSignal notification event:', event);
+              window.dispatchEvent(new CustomEvent('onesignal-notification', {
+                detail: {
+                  type: 'info',
+                  message: event.heading ? `${event.heading}: ${event.content}` : event.content || JSON.stringify(event)
+                }
+              }));
+            });
+
+            // Notification click event: focus existing tab if open
+            window.OneSignal.on('notificationClick', function(event) {
+              const urlToOpen = event.notification.url || event.data?.url;
+              if (!urlToOpen) return;
+              // Try to focus an existing tab with the same URL
+              if (window.clients && window.clients.matchAll) {
+                window.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function(windowClients) {
+                  for (let client of windowClients) {
+                    if (client.url === urlToOpen && 'focus' in client) {
+                      client.focus();
+                      return;
+                    }
+                  }
+                  // If not open, open a new tab
+                  if (window.clients.openWindow) {
+                    window.clients.openWindow(urlToOpen);
+                  }
+                });
+              } else {
+                // Fallback for browsers without clients API
+                window.open(urlToOpen, '_blank');
+              }
+            });
+          });
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

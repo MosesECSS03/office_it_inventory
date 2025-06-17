@@ -1,0 +1,314 @@
+/* Enhanced Table Component Styles */
+
+/* Enhanced Table Header Styling - Improved Sub-column Visibility */
+.header-cell, .sub-header {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+  font-weight: 700 !important;
+  text-align: center;
+  padding: 12px 8px;
+  vertical-align: middle;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.sub-header {
+  background: #333333 !important;
+  color: #ffffff !important;
+  font-size: 12px;
+  padding: 10px 6px;
+  font-weight: 600 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Main table header styling */
+.checkin-checkout-table thead tr:nth-child(1) th {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 700 !important;
+  font-size: 16px; /* Increased from 13px for better readability */
+  white-space: nowrap;
+  border: 1px solid #000000 !important;
+  vertical-align: middle;
+  position: sticky;
+  top: 0;
+  z-index: 10001 !important; /* Increased z-index to ensure proper stacking */
+}
+
+/* Ensure sub-headers are distinct */
+.checkin-checkout-table thead tr:nth-child(2) th {
+  background: #333333 !important;
+  color: #ffffff !important;
+  font-size: 14px; /* Increased from 12px for better readability */
+  font-weight: 600 !important;
+  padding: 10px 6px;
+  text-align: center !important;
+  position: sticky;
+  top: 48px; /* Position below the first header row */
+  z-index: 99; /* Increased z-index to ensure proper stacking */
+}
+
+/* Table layout improvements - Fixed Column Widths */
+.checkin-checkout-table {
+  width: 100%;
+  min-width: 1980px; /* Base total without location: 300+900+300+300+300+300+180 = 2580px. With location: +250px = 2830px */
+  border-collapse: separate; /* Changed to separate for better border control */
+  border-spacing: 0;
+  font-size: 14px;
+  table-layout: fixed; /* Fixed layout for consistent column widths */
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+.checkin-checkout-table td {
+  padding: 0; /* Remove padding to let inputs fill cells completely */
+  border: 2px solid #333333 !important; /* Stronger borders for better cell visibility */
+  vertical-align: middle;
+  background: #ffffff !important;
+  position: relative;
+  min-height: 44px;
+}
+
+.checkin-checkout-table td:hover {
+  background: #f8f9fa !important; /* Light hover effect on cells */
+}
+
+/* Ensure table rows have visible separation */
+.checkin-checkout-table tbody tr {
+  border-bottom: 2px solid #333333;
+}
+
+.checkin-checkout-table tbody tr:hover {
+  background: rgba(0, 86, 179, 0.02) !important;
+}
+
+/* Enhanced Table Input Styling - Completely Borderless */
+.table-input {
+  width: 100%;
+  height: 100%;
+  min-height: 44px; /* Increased minimum height for better usability */
+  padding: 12px 16px; /* Increased padding for better usability */
+  border: none !important; /* Completely remove all borders */
+  border-radius: 0 !important; /* Remove border radius */
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent !important; /* Completely transparent background */
+  color: #000000 !important;
+  outline: none !important; /* Remove focus outline */
+  box-shadow: none !important; /* Remove any box shadows */
+  transition: background-color 0.2s ease;
+  box-sizing: border-box;
+  margin: 0 !important; /* Remove any margin */
+}
+
+.table-input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: rgba(0, 86, 179, 0.08) !important; /* Very light blue background on focus */
+}
+
+.table-input::placeholder {
+  color: #888888;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.table-select {
+  width: 100%;
+  height: 100%;
+  min-height: 44px; /* Increased minimum height */
+  padding: 12px 16px; /* Increased padding */
+  border: none !important; /* Completely remove all borders */
+  border-radius: 0 !important; /* Remove border radius */
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent !important;
+  color: #000000 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none; /* Remove default select styling */
+  cursor: pointer;
+  box-sizing: border-box;
+  margin: 0 !important; /* Remove any margin */
+}
+
+.table-select:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: rgba(0, 86, 179, 0.08) !important;
+}
+
+/* Enhanced Table Container with Horizontal Scroll */
+.table-container {
+  overflow-x: auto; /* Enable horizontal scrolling */
+  overflow-y: visible; /* Allow dropdowns to overflow vertically */
+  max-width: 100%;
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+  /* Enhanced scrollbar styling - Black theme */
+  scrollbar-width: thin;
+  scrollbar-color: #000000 #333333;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 14px; /* Increased scrollbar height for better usability */
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #333333;
+  border-radius: 7px;
+  border: 1px solid #555555;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #000000;
+  border-radius: 7px;
+  border: 2px solid #333333;
+  transition: background 0.3s ease;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #444444;
+}
+
+/* Fixed Column Width Definitions - 1st column 300px */
+.checkin-checkout-table th:nth-child(1),
+.checkin-checkout-table td:nth-child(1) {
+  width: 300px; /* ECSS Inventory No - search functionality */
+  min-width: 300px;
+  max-width: 300px;
+}
+
+/* Item Description Sub-columns - Brand column extra wide */
+.checkin-checkout-table th:nth-child(2),
+.checkin-checkout-table td:nth-child(2) {
+  width: 900px; /* Brand - reduced to 1600px as requested */
+  min-width: 600px;
+  max-width: 1200px;
+}
+
+.checkin-checkout-table th:nth-child(3),
+.checkin-checkout-table td:nth-child(3) {
+  width: 300px; /* Model */
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.checkin-checkout-table th:nth-child(4),
+.checkin-checkout-table td:nth-child(4) {
+  width: 300px; /* Model No */
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.checkin-checkout-table th:nth-child(5),
+.checkin-checkout-table td:nth-child(5) {
+  width: 300px; /* Color */
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.checkin-checkout-table th:nth-child(6),
+.checkin-checkout-table td:nth-child(6) {
+  width: 300px; /* Serial Number */
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.checkin-checkout-table th:nth-child(7),
+.checkin-checkout-table td:nth-child(7) {
+  width: 300px; /* Condition - 300px as requested */
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.checkin-checkout-table th:nth-child(8),
+.checkin-checkout-table td:nth-child(8) {
+  width: 300px; /* Notes - 300px as requested */
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.checkin-checkout-table th:nth-child(9),
+.checkin-checkout-table td:nth-child(9) {
+  width: 250px; /* Location - 250px width (conditional) */
+  min-width: 250px;
+  max-width: 250px;
+}
+
+/* Actions column - can be 9th (without location) or 10th (with location) */
+.checkin-checkout-table th:nth-child(9):last-child,
+.checkin-checkout-table td:nth-child(9):last-child,
+.checkin-checkout-table th:nth-child(10),
+.checkin-checkout-table td:nth-child(10) {
+  width: 180px; /* Actions - exact button size */
+  min-width: 180px;
+  max-width: 180px;
+}
+
+/* Location field styling for enabled/disabled states */
+.location-enabled {
+  background-color: #ffffff !important;
+  border-color: #28a745 !important;
+  color: #000000 !important;
+}
+
+.location-enabled:focus {
+  border-color: #20c997 !important;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25) !important;
+}
+
+.location-disabled {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #6c757d !important;
+}
+
+/* Return button styling */
+.return-btn {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-height: 44px;
+  padding: 12px 16px;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.return-btn:hover:not(:disabled) {
+  background: #138496;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.return-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.return-active {
+  background: #28a745 !important;
+}
+
+.return-active:hover:not(:disabled) {
+  background: #20c997 !important;
+}

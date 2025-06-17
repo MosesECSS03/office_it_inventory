@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import '../css/ActionButtonsComponent.css'
 
 class CheckinCheckoutButtonComponent extends Component {
   handleClick = (e) => {

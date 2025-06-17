@@ -1,0 +1,930 @@
+/* Equipment Checkout/Checkin Form - Optimized Styles */
+
+/* === MODAL SYSTEM === */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: visible;
+  animation: modalSlideIn 0.3s ease-out;
+  color: #333;
+   z-index: 1000;
+  position: relative;
+}
+
+.checkin-checkout-table-modal {
+  width: 98vw;
+  max-width: 3000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #ff0000;
+}
+
+.modal-body {
+  padding: 30px;
+  color: #333;
+  background: #ffffff;
+  position: relative;
+  overflow: visible;
+  /* Ensure dropdowns can overlay properly */
+  z-index: 1;
+}
+
+/* === TAB NAVIGATION === */
+.tab-navigation {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.main-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  border: none;
+  background: #f5f5f5;
+  color: #666;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  margin-right: 2px;
+}
+
+.tab-button:hover {
+  background: #e8f4fd;
+  color: #2196F3;
+}
+
+.tab-button.active {
+  background: #2196F3;
+  color: white;
+  border-bottom-color: #1976D2;
+}
+
+/* === PROGRESS SYSTEM === */
+.progress-container {
+  margin: 20px 0;
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2196F3, #4CAF50);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.page-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.page-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  background: #f8f9fa;
+  color: #666;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.page-indicator.completed {
+  background: #4CAF50;
+  border-color: #4CAF50;
+  color: white;
+}
+
+.page-indicator.active {
+  background: #2196F3;
+  border-color: #2196F3;
+  color: white;
+  transform: scale(1.05);
+}
+
+.page-indicator:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-indicator:hover:not(:disabled) {
+  border-color: #2196F3;
+  background: #e3f2fd;
+  color: #2196F3;
+}
+
+/* === FORM PAGES === */
+.form-page {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.pdf-style-page {
+  background: #ffffff;
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  font-family: 'Arial', sans-serif;
+  border: 1px solid #e0e0e0;
+}
+
+.pdf-header {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #333;
+  padding-bottom: 20px;
+  background: #f8f9fa;
+  margin: -40px -40px 30px -40px;
+  padding: 30px 40px 20px 40px;
+}
+
+.form-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 10px 0;
+}
+
+.form-subtitle {
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+}
+
+.page-title {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* === EMPLOYEE DETAILS SECTION === */
+.employee-details-section {
+  margin-bottom: 30px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.employee-details-section h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  text-decoration: underline;
+  text-decoration-color: #333;
+}
+
+/* === FORM CONTROLS === */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* Reduced gap for tighter layout */
+  margin-bottom: 18px; /* Slightly reduced bottom margin */
+  width: 80%;
+  position: relative; /* Position context for internal dropdowns */
+  overflow: visible; /* Allow dropdowns to overflow */
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.form-row {
+  margin-bottom: 18px; /* Consistent with form-group spacing */
+  gap: 0;
+  position: relative; /* Add positioning context for dropdown overlay */
+}
+
+.form-control,
+.underline-input {
+  width: 100%;
+  max-width: none; /* Remove restrictive max-width */
+  height: 50px !important; /* Increase height for better text visibility */
+  padding: 14px 16px !important; /* Increase vertical padding */
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4; /* Add line-height for better text rendering */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #333;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-control:focus,
+.underline-input:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+  background: #ffffff;
+  color: #333;
+}
+
+.form-control::placeholder,
+.underline-input::placeholder {
+  color: #999;
+  opacity: 1;
+}
+
+.form-control.error,
+.underline-input.error {
+  border-color: #f44336;
+  background: #fff;
+}
+
+.form-control.readonly,
+.underline-input.readonly {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.required {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.error-text {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* === FORMAL LETTER SECTION === */
+.formal-letter-section {
+  margin-top: 40px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.letter-header {
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.letter-body {
+  margin-bottom: 30px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.letter-body p {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.signature-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.signature-input {
+  font-style: italic;
+}
+
+/* === TABLE SYSTEM === */
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+  z-index: 1;
+}
+
+.checkin-checkout-table {
+  width: 100%;
+  border-collapse: collapse;
+  position: relative;
+  z-index: 1;
+}
+
+.header-cell {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.sub-header {
+  position: sticky;
+  top: 48px;
+  z-index: 999;
+  background: #333333;
+  color: #ffffff;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #555;
+}
+
+.table-row td {
+  position: relative;
+  overflow: visible; /* Allow dropdowns to overflow table cell */
+  padding: 6px; /* Slightly reduced padding for better visual balance */
+  border: 1px solid #ddd;
+  vertical-align: middle; /* Center align content vertically */
+  min-width: 120px; /* Minimum width for better column consistency */
+}
+
+.table-input {
+  width: 100%;
+  height: 40px; /* Consistent height for table inputs */
+  padding: 10px 12px; /* Slightly less padding than form controls */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #333;
+  box-sizing: border-box; /* Ensure consistent sizing */
+  line-height: normal; /* Normalize line height */
+}
+
+.table-input:focus {
+  border-color: #2196F3;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.table-input.error {
+  border-color: #f44336;
+}
+
+.cell-error {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* === SEARCH DROPDOWN (Table) === */
+.search-dropdown-container {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+  overflow: visible; /* Allow dropdown to overflow */
+}
+
+.input-with-clear {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.clear-input-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #999;
+  padding: 2px;
+  line-height: 1;
+  z-index: 2;
+}
+
+.clear-input-btn:hover {
+  color: #f44336;
+}
+
+.search-dropdown {
+  position: fixed !important;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white !important;
+  border: 2px solid #2196F3 !important;
+  border-radius: 6px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 10000 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  margin-top: 2px !important;
+  pointer-events: auto !important;
+}
+
+.search-dropdown-item {
+  padding: 12px 16px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.search-dropdown-item:hover {
+  background-color: #e3f2fd;
+  color: #1976D2;
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-value {
+  font-weight: 600;
+  color: #1976D2;
+  font-size: 14px;
+}
+
+.suggestion-label {
+  color: #666;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Employee dropdown - overlapping with scrollable content */
+.employee-dropdown {
+  position: fixed !important;
+  z-index: 9999 !important;
+  border: 2px solid #2196F3 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  background: white !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  border-radius: 6px !important;
+  margin-top: 2px !important;
+  /* Prevent the dropdown from being affected by parent scrolling */
+  pointer-events: auto !important;
+}
+
+.employee-dropdown-item {
+  padding: 12px 16px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.employee-dropdown-item:hover {
+  background-color: #e3f2fd;
+  color: #1976D2;
+}
+
+.employee-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.employee-dropdown-item.no-results {
+  color: #666;
+  font-style: italic;
+  cursor: default;
+}
+
+/* Employee info styling within dropdown items */
+.employee-search-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.employee-search-code {
+  font-weight: 600;
+  color: #1976D2;
+  font-size: 14px;
+}
+
+.employee-search-name {
+  color: #666;
+  font-size: 12px;
+}
+
+.form-control.underline-input 
+{
+  max-width: 100%;
+}
+
+
+/* === TABLE ACTIONS === */
+.table-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.return-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.return-btn:hover {
+  background: #45a049;
+}
+
+.delete-row-btn {
+  background: #f44336;
+  border: none;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  width: 100%;
+  height: 100%;
+  min-height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.delete-row-btn:hover {
+  background: #d32f2f;
+}
+
+.delete-row-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-row-btn {
+  margin-top: 10px;
+}
+
+/* Location field states */
+.location-enabled {
+  background-color: #ffffff;
+  border-color: #28a745;
+  color: #000000;
+}
+
+.location-disabled {
+  background-color: #f5f5f5;
+  border-color: #ddd;
+  color: #999;
+}
+
+/* === BUTTONS === */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.btn-primary {
+  background: #2196F3;
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1976D2;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: #ffffff;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #545b62;
+  color: #ffffff;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* === FORM ACTIONS === */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #e0e0e0;
+}
+
+.navigation-buttons {
+  flex: 1;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* === MESSAGES === */
+.success-message {
+  background: #e8f5e8;
+  color: #4caf50;
+  border-left: 4px solid #4caf50;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.error-message {
+  background: #ffebee;
+  color: #f44336;
+  border-left: 4px solid #f44336;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+  .pdf-style-page {
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .form-title {
+    font-size: 20px;
+  }
+  
+  .form-subtitle {
+    font-size: 14px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  /* Improve mobile input sizing */
+  .form-control,
+  .underline-input {
+    height: 50px !important; /* Match desktop sizing for consistency */
+    font-size: 16px; /* Prevent zoom on iOS devices */
+    padding: 14px 16px !important; /* Match desktop padding */
+    line-height: 1.4; /* Consistent line height */
+  }
+  
+  .table-input {
+    height: 40px;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+  
+  .table-row td {
+    padding: 4px;
+    min-width: 100px;
+  }
+}
+
+/* Inventory suggestions dropdown - rendered outside modal */
+.inventory-suggestions-dropdown {
+  position: fixed !important;
+  background: white !important;
+  border: 2px solid #4CAF50 !important;
+  border-radius: 8px !important;
+  max-height: 350px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  z-index: 15000 !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+  margin-top: 2px !important;
+  pointer-events: auto !important;
+  min-width: 300px !important;
+}
+
+.inventory-suggestion-item {
+  padding: 14px 18px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  border-bottom: 1px solid #e8f5e8;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inventory-suggestion-item:hover {
+  background-color: #f1f8e9;
+  color: #2e7d32;
+  transform: translateX(2px);
+}
+
+.inventory-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.inventory-suggestion-item .suggestion-value {
+  font-weight: 700;
+  color: #2e7d32;
+  font-size: 14px;
+}
+
+.inventory-suggestion-item .suggestion-label {
+  font-size: 12px !important;
+  color: #666 !important;
+  font-style: italic;
+}
+
+/* External employee dropdown - positioned fixed but constrained to modal bottom */
+.employee-dropdown-internal {
+  position: fixed !important;
+  z-index: 19000 !important;
+  border: 2px solid #2196F3 !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+  background: white !important;
+  max-height: calc(90vh - var(--dropdown-top, 0px) - 20px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  border-radius: 6px !important;
+  margin-top: 2px !important;
+  pointer-events: auto !important;
+  min-width: 300px !important;
+  /* Animation for smooth appearance */
+  animation: dropdownSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top;
+  /* Constrain to modal boundaries */
+  max-width: calc(90vw - 40px) !important;
+}
+
+/* External inventory dropdown - positioned fixed with highest z-index */
+.inventory-suggestions-dropdown-internal {
+  position: fixed !important;
+  z-index: 20000 !important; /* Higher than employee dropdown */
+  background: white !important;
+  border: 2px solid #4CAF50 !important;
+  border-radius: 8px !important;
+  max-height: calc(90vh - var(--dropdown-top, 0px) - 20px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+  margin-top: 2px !important;
+  pointer-events: auto !important;
+  min-width: 300px !important;
+  /* Animation for smooth appearance */
+  animation: dropdownSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top;
+  /* Constrain to modal boundaries */
+  max-width: calc(90vw - 40px) !important;
+}
+
+/* Dropdown animation */
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: scaleY(0.95) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}

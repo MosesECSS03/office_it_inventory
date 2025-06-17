@@ -72,11 +72,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.85); /* Increased opacity for better contrast */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(8px); /* Added blur effect for background */
   animation: fadeIn 0.3s ease;
 }
 
