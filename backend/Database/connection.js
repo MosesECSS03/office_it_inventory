@@ -11,7 +11,8 @@ class DatabaseConnection {
     this.isConnected = false;
     
     // Database configuration
-    this.uri = process.env.MONGODB_URI || 'mongodb+srv://moseslee:Mlxy6695@ecss-course.hejib.mongodb.net/?retryWrites=true&w=majority&appName=ECSS-Course';
+    //this.uri = 'mongodb+srv://moseslee:Mlxy6695@ecss-course.hejib.mongodb.net/?retryWrites=true&w=majority&appName=ECSS-Course';
+    this.uri = 'mongodb+srv://moseslee:Mlxy6695@ecss-database.dstyrk4.mongodb.net/?retryWrites=true&w=majority&appName=ECSS-Database';
     this.databaseName = 'IT-Management-System';
   }
 
