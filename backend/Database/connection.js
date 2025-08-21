@@ -12,7 +12,7 @@ class DatabaseConnection {
     
     // Database configuration
     //this.uri = 'mongodb+srv://moseslee:Mlxy6695@ecss-course.hejib.mongodb.net/?retryWrites=true&w=majority&appName=ECSS-Course';
-    this.uri = 'mongodb+srv://moseslee:Mlxy6695@ecss-database.dstyrk4.mongodb.net/?retryWrites=true&w=majority&appName=ECSS-Database';
+    this.uri = "mongodb+srv://MosesLee:Mlxy%406695@company-management-syst.ulotbgi.mongodb.net/?retryWrites=true&w=majority&appName=Company-Management-System";
     this.databaseName = 'IT-Management-System';
   }
 
