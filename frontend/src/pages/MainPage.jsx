@@ -146,11 +146,12 @@ class MainPage extends Component {
 
   // Prevent scroll events
   preventScroll = (e) => {
-    // Only prevent if the target is not within a modal
-    if (!e.target.closest('.modal-overlay') && !e.target.closest('.modal-content')) {
-      e.preventDefault();
-      e.stopPropagation();
+    // Allow scrolling if the target is within a modal content area or breakdown content
+    if (e.target.closest('.modal-overlay') || e.target.closest('.modal-content') || e.target.closest('.stats-breakdown-content')) {
+      return; // Allow scrolling
     }
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   // Prevent keyboard scrolling (arrow keys, page up/down, space, etc.)
@@ -448,7 +449,7 @@ class MainPage extends Component {
 
   // Statistics Modal Methods
   handleOpenStatisticsModal = (tab = 'status', subTab = 'summary') => {
-    const modalData = this.generateBreakdownData(this.state.inventoryData);
+    const modalData = this.generateBreakdownData(this.state.filteredInventoryData);
     this.setState(prevState => ({
       statisticsModalState: {
         ...prevState.statisticsModalState,
@@ -809,7 +810,7 @@ class MainPage extends Component {
     if (!currentData) {
       return (
         <div className="stats-modal-overlay" onClick={this.handleCloseStatisticsModal}>
-          <div className="stats-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="stats-modal-content scrollable-modal" onClick={(e) => e.stopPropagation()}>
             <div className="stats-modal-header">
               <h2 className="stats-modal-title">
                 <span className="stats-modal-icon">📊</span>
@@ -823,7 +824,7 @@ class MainPage extends Component {
                 ✕
               </button>
             </div>
-            <div className="stats-modal-body">
+            <div className="stats-modal-body scrollable-content">
               <p>No data available</p>
             </div>
           </div>
@@ -833,7 +834,7 @@ class MainPage extends Component {
 
     return (
       <div className="stats-modal-overlay" onClick={this.handleCloseStatisticsModal}>
-        <div className="stats-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="stats-modal-content scrollable-modal" onClick={(e) => e.stopPropagation()}>
           <div className="stats-modal-header">
             <h2 className="stats-modal-title">
               <span className="stats-modal-icon">📊</span>
@@ -895,29 +896,82 @@ class MainPage extends Component {
                     Summary Overview
                   </h3>
                   <div className="breakdown-grid">
-                    {Object.entries(currentData.categories).map(([category, count]) => (
-                      <div key={category} className="breakdown-card">
-                        <div className="breakdown-card-header">
-                          <h4 className="breakdown-card-title">
-                            <span className="breakdown-card-icon">
-                              {this.getCategoryIcon(category, 'status')}
-                            </span>
-                            {category}
-                          </h4>
-                        </div>
-                        <div className="breakdown-card-value">
-                          {count.toLocaleString()}
-                        </div>
-                        <div className="breakdown-card-details">
-                          <div className="breakdown-detail-item">
-                            <span className="breakdown-detail-label">Percentage</span>
-                            <span className="breakdown-detail-value">
-                              {this.calculatePercentage(count, currentData.categories)}%
-                            </span>
+                    {Object.entries(currentData.categoriesWithItems || currentData.categories).map(([category, data]) => {
+                      const cardId = `${activeTab}-${activeSubTab}-${category}`;
+                      const isExpanded = expandedCards[cardId];
+                      
+                      // Handle both old and new data structures
+                      const count = data.count || data;
+                      const items = data.items || [];
+                      
+                      return (
+                        <div key={category} className="breakdown-card detailed-breakdown-card">
+                          <div className="breakdown-card-header">
+                            <h4 className="breakdown-card-title">
+                              <span className="breakdown-card-icon">
+                                {this.getCategoryIcon(category, 'status')}
+                              </span>
+                              {category}
+                            </h4>
+                            {items.length > 0 && (
+                              <button
+                                className="expand-button"
+                                onClick={() => this.toggleStatisticsCardExpansion(cardId)}
+                                title={isExpanded ? 'Collapse details' : 'Expand details'}
+                              >
+                                {isExpanded ? '▼' : '▶'}
+                              </button>
+                            )}
                           </div>
+                          <div className="breakdown-card-value">
+                            {count.toLocaleString()}
+                          </div>
+                          <div className="breakdown-card-details">
+                            <div className="breakdown-detail-item">
+                              <span className="breakdown-detail-label">Percentage</span>
+                              <span className="breakdown-detail-value">
+                                {this.calculatePercentage(count, currentData.categories)}%
+                              </span>
+                            </div>
+                          </div>
+                          {isExpanded && items.length > 0 && (
+                            <div className="breakdown-card-expanded">
+                              <div className="expanded-items-list">
+                                <h5>{category} items: ({items.length} items)</h5>
+                                <div className="expanded-items">
+                                  {items.map((item, index) => (
+                                    <div key={index} className="expanded-item">
+                                      <div className="item-details">
+                                        <span className="item-name">
+                                          {(item._category || 'No Category')} - {(item._brand || 'No Brand')} {(item._model || '')}
+                                        </span>
+                                        <span className="item-serial">
+                                          S/N: {item._serialNumber || 'No Serial Number'}
+                                        </span>
+                                        <span className="item-location">
+                                          Location: {item._location || 'No Location'}
+                                        </span>
+                                        <span className={`item-status status-${(item._status || 'unknown').toLowerCase().replace(' ', '-')}`}>
+                                          Status: {item._status || 'Unknown'}
+                                        </span>
+                                        <span className="item-asset-tag">
+                                          Asset Tag: {item._assetsIdTag || 'No Asset Tag'}
+                                        </span>
+                                        {item._assignedUser && (
+                                          <span className="item-user">
+                                            Assigned to: {item._assignedUser}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -932,7 +986,92 @@ class MainPage extends Component {
                     {activeSubTab === 'user' ? 'By User/Assignee' : 'By Status Type'}
                   </h3>
                   <div className="breakdown-grid">
-                    {Object.entries(currentData.details[activeSubTab === 'user' ? 'user' : 'status'].data).map(([category, data]) => {
+                    {activeSubTab === 'status-type' 
+                      ? Object.entries(currentData.categoriesWithItems || currentData.categories)
+                          .map(([category, data]) => {
+                            const cardId = `${activeTab}-${activeSubTab}-${category}`;
+                            const isExpanded = expandedCards[cardId];
+                            
+                            // Handle both old and new data structures
+                            const count = data.count || data;
+                            const items = data.items || [];
+                            
+                            return (
+                              <div key={category} className="breakdown-card detailed-breakdown-card">
+                                <div className="breakdown-card-header">
+                                  <h4 className="breakdown-card-title">
+                                    <span className="breakdown-card-icon">⚡</span>
+                                    {category}
+                                  </h4>
+                                  {items.length > 0 && (
+                                    <button
+                                      className="expand-button"
+                                      onClick={() => this.toggleStatisticsCardExpansion(cardId)}
+                                      title={isExpanded ? 'Collapse details' : 'Expand details'}
+                                    >
+                                      {isExpanded ? '▼' : '▶'}
+                                    </button>
+                                  )}
+                                </div>
+                                <div className="breakdown-card-value">
+                                  {count.toLocaleString()}
+                                </div>
+                                <div className="breakdown-card-details">
+                                  <div className="breakdown-detail-item">
+                                    <span className="breakdown-detail-label">Percentage</span>
+                                    <span className="breakdown-detail-value">
+                                      {this.calculatePercentage(count, currentData.categories)}%
+                                    </span>
+                                  </div>
+                                </div>
+                                {isExpanded && items.length > 0 && (
+                                  <div className="breakdown-card-expanded">
+                                    <div className="expanded-items-list">
+                                      <h5>Items with {category} status: ({items.length} items)</h5>
+                                      <div className="expanded-items">
+                                        {items.map((item, index) => (
+                                          <div key={index} className="expanded-item">
+                                            <div className="item-details">
+                                              <span className="item-name">
+                                                {(item._category || 'No Category')} - {(item._brand || 'No Brand')} {(item._model || '')}
+                                              </span>
+                                              <span className="item-serial">
+                                                S/N: {item._serialNumber || 'No Serial Number'}
+                                              </span>
+                                              <span className="item-location">
+                                                Location: {item._location || 'No Location'}
+                                              </span>
+                                              <span className={`item-status status-${(item._status || 'unknown').toLowerCase().replace(' ', '-')}`}>
+                                                Status: {item._status || 'Unknown'}
+                                              </span>
+                                              <span className="item-asset-tag">
+                                                Asset Tag: {item._assetsIdTag || 'No Asset Tag'}
+                                              </span>
+                                              {(item._assignedUser || item._user) && (
+                                                <span className="item-user">
+                                                  Assigned to: {item._assignedUser || item._user}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                      : Object.entries(currentData.details[activeSubTab === 'user' ? 'user' : 'status'].data)
+                          .sort(([a], [b]) => {
+                            // For user tab, put "Unassigned" first, then alphabetical
+                            if (activeSubTab === 'user') {
+                              if (a === 'Unassigned') return -1;
+                              if (b === 'Unassigned') return 1;
+                            }
+                            return a.localeCompare(b);
+                          })
+                          .map(([category, data]) => {
                       const cardId = `${activeTab}-${activeSubTab}-${category}`;
                       const isExpanded = expandedCards[cardId];
                       
@@ -943,8 +1082,12 @@ class MainPage extends Component {
                         // User tab with items array
                         totalCount = data.items.length;
                         items = data.items;
+                      } else if (activeSubTab === 'status-type' && data.items) {
+                        // Status type tab with items array
+                        totalCount = data.items.length;
+                        items = data.items;
                       } else {
-                        // Status type tab with location counts
+                        // Fallback for old data structure
                         totalCount = Object.values(data).reduce((sum, count) => sum + count, 0);
                       }
                       
@@ -957,7 +1100,7 @@ class MainPage extends Component {
                               </span>
                               {category}
                             </h4>
-                            {activeSubTab === 'user' && items.length > 0 && (
+                            {items.length > 0 && (
                               <button
                                 className="expand-button"
                                 onClick={() => this.toggleStatisticsCardExpansion(cardId)}
@@ -978,23 +1121,39 @@ class MainPage extends Component {
                               </span>
                             </div>
                           </div>
-                          {activeSubTab === 'user' && isExpanded && items.length > 0 && (
+                          {isExpanded && items.length > 0 && (
                             <div className="breakdown-card-expanded">
                               <div className="expanded-items-list">
-                                <h5>Items assigned to {category}:</h5>
+                                <h5>
+                                  {activeSubTab === 'user' 
+                                    ? `Items assigned to ${category}: (${items.length} items)`
+                                    : `Items with ${category} status: (${items.length} items)`
+                                  }
+                                </h5>
                                 <div className="expanded-items">
                                   {items.map((item, index) => (
                                     <div key={index} className="expanded-item">
                                       <div className="item-details">
                                         <span className="item-name">
-                                          {item._category || 'Unknown'} - {item._brand || 'Unknown'} {item._model || ''}
+                                          {(item._category || 'No Category')} - {(item._brand || 'No Brand')} {(item._model || '')}
                                         </span>
                                         <span className="item-serial">
-                                          S/N: {item._serialNumber || 'Unknown'}
+                                          S/N: {item._serialNumber || 'No Serial Number'}
+                                        </span>
+                                        <span className="item-location">
+                                          Location: {item._location || 'No Location'}
                                         </span>
                                         <span className={`item-status status-${(item._status || 'unknown').toLowerCase().replace(' ', '-')}`}>
-                                          {item._status || 'Unknown'}
+                                          Status: {item._status || 'Unknown'}
                                         </span>
+                                        <span className="item-asset-tag">
+                                          Asset Tag: {item._assetsIdTag || 'No Asset Tag'}
+                                        </span>
+                                        {activeSubTab === 'status-type' && (item._assignedUser || item._user) && (
+                                          <span className="item-user">
+                                            Assigned to: {item._assignedUser || item._user}
+                                          </span>
+                                        )}
                                       </div>
                                     </div>
                                   ))}
@@ -1002,9 +1161,30 @@ class MainPage extends Component {
                               </div>
                             </div>
                           )}
+                          {isExpanded && items.length === 0 && (
+                            <div className="breakdown-card-expanded">
+                              <div className="expanded-items-list">
+                                <h5>
+                                  {activeSubTab === 'user' 
+                                    ? `Items assigned to ${category}:`
+                                    : `Items with ${category} status:`
+                                  }
+                                </h5>
+                                <div className="no-items-message">
+                                  <p>
+                                    {activeSubTab === 'user' 
+                                      ? 'No items are currently assigned to this user.'
+                                      : 'No items currently have this status.'
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
-                    })}
+                    })
+                    }
                   </div>
                 </div>
               )}
@@ -1053,15 +1233,31 @@ class MainPage extends Component {
 
     // Generate status breakdown
     const statusBreakdown = {};
+    const statusBreakdownWithItems = {};
     const userBreakdown = {};
     const statusTypeBreakdown = {};
 
     inventoryData.forEach(item => {
-      const status = item._status || 'Unknown';
+      const status = (item._status || 'Unknown').toString().trim();
       const user = item._assignedUser || item._user || 'Unassigned';
+      
+      // Debug: Log status values to see duplicates
+      if (status.toLowerCase().includes('working')) {
+        console.log('Status found:', `"${status}"`, 'Item:', item);
+      }
       
       // Count by status
       statusBreakdown[status] = (statusBreakdown[status] || 0) + 1;
+      
+      // Status breakdown with items for expandable cards
+      if (!statusBreakdownWithItems[status]) {
+        statusBreakdownWithItems[status] = {
+          items: [],
+          count: 0
+        };
+      }
+      statusBreakdownWithItems[status].items.push(item);
+      statusBreakdownWithItems[status].count += 1;
       
       // Count by user
       if (!userBreakdown[user]) {
@@ -1076,14 +1272,23 @@ class MainPage extends Component {
       // Count by location for status type breakdown
       const location = item._location || 'Unknown Location';
       if (!statusTypeBreakdown[status]) {
-        statusTypeBreakdown[status] = {};
+        statusTypeBreakdown[status] = {
+          items: [],
+          locationCounts: {}
+        };
       }
-      statusTypeBreakdown[status][location] = (statusTypeBreakdown[status][location] || 0) + 1;
+      statusTypeBreakdown[status].items.push(item);
+      statusTypeBreakdown[status].locationCounts[location] = (statusTypeBreakdown[status].locationCounts[location] || 0) + 1;
     });
+
+    // Debug: Log final breakdown data
+    console.log('Final statusBreakdown:', statusBreakdown);
+    console.log('Final statusBreakdownWithItems:', statusBreakdownWithItems);
 
     return {
       status: {
         categories: statusBreakdown,
+        categoriesWithItems: statusBreakdownWithItems,
         details: {
           user: {
             icon: '👤',
@@ -1113,14 +1318,14 @@ class MainPage extends Component {
 
     return (
       <div className="export-modal-overlay" onClick={this.handleCloseExportModal}>
-        <div className="export-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="export-modal scrollable-modal" onClick={(e) => e.stopPropagation()}>
           <div className="export-modal-header">
             <h3>Export Options</h3>
             <button className="export-modal-close" onClick={this.handleCloseExportModal}>
               ×
             </button>
           </div>
-          <div className="export-modal-content">
+          <div className="export-modal-content scrollable-content">
             <p>Choose what you would like to export:</p>
             <div className="export-options">
               <button 

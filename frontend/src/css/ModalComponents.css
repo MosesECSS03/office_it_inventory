@@ -23,6 +23,58 @@
   overflow-y: auto;
   overflow-x: visible;
   animation: modalSlideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable Modal Enhancement */
+.scrollable-modal {
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  max-height: calc(90vh - 120px); /* Account for header height */
+}
+
+/* Custom scrollbar for modals */
+.scrollable-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Modal Content Centering */
+.modal-content .scrollable-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 20px;
+}
+
+.modal-content .scrollable-content > * {
+  width: 100%;
+  max-width: 100%;
 }
 
 @keyframes modalSlideIn {

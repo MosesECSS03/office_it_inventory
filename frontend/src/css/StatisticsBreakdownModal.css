@@ -30,12 +30,49 @@
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-  width: 90vw;
-  max-width: 1200px;
-  max-height: 90vh;
-  overflow-y: auto;
+  width: 95vw;
+  max-width: 1000px;
+  max-height: 85vh;
   animation: slideIn 0.3s ease-out;
   border: 2px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.stats-modal-content.scrollable-modal {
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-modal-content .scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  max-height: calc(90vh - 120px); /* Account for header height */
+}
+
+/* Custom scrollbar for stats modal */
+.stats-modal-content .scrollable-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.stats-modal-content .scrollable-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.stats-modal-content .scrollable-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.stats-modal-content .scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 @keyframes slideIn {
@@ -103,18 +140,26 @@
 
 /* Modal Body */
 .stats-modal-body {
-  padding: 32px;
+  padding: 20px 15px 0 15px;
   background: #ffffff;
   color: #2c3e50;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+  height: calc(85vh - 120px);
 }
 
 /* Tab Navigation */
 .stats-tab-navigation {
   display: flex;
   gap: 4px;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
   border-bottom: 2px solid #ecf0f1;
   padding-bottom: 0;
+  justify-content: flex-start;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .stats-tab-button {
@@ -157,12 +202,15 @@
 .stats-sub-tab-navigation {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   margin-top: 16px;
   background: #f8f9fa;
   padding: 8px;
   border-radius: 12px;
   border: 1px solid #e9ecef;
+  justify-content: center;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .stats-sub-tab-button {
@@ -268,11 +316,41 @@
 
 /* Breakdown Content */
 .stats-breakdown-content {
-  min-height: 400px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px 15px 20px 15px;
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  max-height: calc(85vh - 250px) !important;
+  min-height: 300px;
+}
+
+/* Custom scrollbar for breakdown content */
+.stats-breakdown-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.stats-breakdown-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.stats-breakdown-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.stats-breakdown-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .breakdown-section {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .breakdown-section-title {
@@ -293,9 +371,10 @@
 /* Breakdown Grid */
 .breakdown-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
 .breakdown-card {
@@ -305,12 +384,36 @@
   padding: 24px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .breakdown-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   border-color: #3498db;
+}
+
+/* Custom scrollbar for breakdown cards */
+.breakdown-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.breakdown-card::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.breakdown-card::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.breakdown-card::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .breakdown-card-header {
@@ -662,6 +765,8 @@
 /* Detailed Breakdown Cards */
 .detailed-breakdown-card {
   min-height: 180px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .breakdown-status-tags {
@@ -775,6 +880,174 @@
     max-height: 500px;
     transform: translateY(0);
   }
+}
+
+/* Breakdown Card Expanded Content */
+.breakdown-card-expanded {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e8e8e8;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.expanded-items-list {
+  width: 100%;
+}
+
+.expanded-items-list h5 {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #34495e;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ecf0f1;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.expanded-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.expanded-item {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.expanded-item:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.item-serial {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-family: 'Courier New', monospace;
+}
+
+.item-location {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.item-asset-tag {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.no-items-message {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px dashed #dee2e6;
+}
+
+.no-items-message p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.item-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.item-status.status-working {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.item-status.status-not-working {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.item-status.status-pending {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.item-status.status-spoilt {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.item-status.status-available {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.item-status.status-checked-out {
+  background: #e2e3e5;
+  color: #383d41;
+  border: 1px solid #d6d8db;
+}
+
+.item-status.status-maintenance {
+  background: #ffeaa7;
+  color: #856404;
+  border: 1px solid #ffd93d;
+}
+
+.item-status.status-unknown {
+  background: #e2e3e5;
+  color: #383d41;
+  border: 1px solid #d6d8db;
+}
+
+/* Custom scrollbar for expanded items */
+.breakdown-card-expanded::-webkit-scrollbar {
+  width: 6px;
+}
+
+.breakdown-card-expanded::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.breakdown-card-expanded::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.breakdown-card-expanded::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .expanded-header {

@@ -244,15 +244,20 @@ class FilterSearchComponent extends Component {
   handleComboboxSelect = (filterType, value) => {
     const stateUpdate = {};
     
+    // Handle "All" selection by clearing the filter
+    const isAllSelection = value === 'All Warranty Statuses' || value === 'All Device Statuses';
+    const filterValue = isAllSelection ? '' : value;
+    const inputValue = isAllSelection ? '' : value;
+    
     // Update both input and filter values when selecting from dropdown
     if (filterType === 'warrantyStatus') {
-      stateUpdate.warrantyStatusInput = value;
-      stateUpdate.warrantyStatus = value;
+      stateUpdate.warrantyStatusInput = inputValue;
+      stateUpdate.warrantyStatus = filterValue;
       stateUpdate.showWarrantyDropdown = false;
       stateUpdate.showAllOptions = false;
     } else if (filterType === 'selectedStatus') {
-      stateUpdate.selectedStatusInput = value;
-      stateUpdate.selectedStatus = value;
+      stateUpdate.selectedStatusInput = inputValue;
+      stateUpdate.selectedStatus = filterValue;
       stateUpdate.showStatusDropdown = false;
       stateUpdate.showAllOptions = false;
     }
@@ -328,13 +333,15 @@ class FilterSearchComponent extends Component {
     const warrantyStatusSuggestions = this.getUniqueWarrantyStatuses(data);
     
     // Get filtered suggestions for each combobox
-    const filteredWarrantySuggestions = this.state.showAllOptions && showWarrantyDropdown ? 
+    const baseWarrantySuggestions = this.state.showAllOptions && showWarrantyDropdown ? 
       warrantyStatusSuggestions : 
       this.getFilteredSuggestions(warrantyStatusSuggestions, warrantyStatusInput);
+    const filteredWarrantySuggestions = ['All Warranty Statuses', ...baseWarrantySuggestions];
       
-    const filteredStatusSuggestions = this.state.showAllOptions && showStatusDropdown ? 
+    const baseStatusSuggestions = this.state.showAllOptions && showStatusDropdown ? 
       statuses : 
       this.getFilteredSuggestions(statuses, selectedStatusInput);
+    const filteredStatusSuggestions = ['All Device Statuses', ...baseStatusSuggestions];
 
     // Count active filters
     const activeFilterCount = [warrantyStatus, selectedStatus].filter(filter => filter !== '').length;
